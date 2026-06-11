@@ -616,7 +616,7 @@ const PAL=['#1a3a5c','#e84c1e','#1db87a','#f5a623','#7b5ea7','#3a86ff','#f72585'
 
 // ── GAS CONFIG ────────────────────────────────────────────────────────────────
 // วาง GAS Web App URL ที่นี่ หรือจะใส่ผ่าน popup เมื่อเปิดหน้าแรก
-let GAS_URL = localStorage.getItem('iks_gas_url') || '';
+let GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/macros/s/AKfycbwxaxp67EowesTbV1PKvHvUBjTLFFDLS20FoXFGBUzdTqx_iJQWdamCEdxbXgU17Ox6qQ/exec';
 
 // ── EMPTY INITIAL ARRAYS ─────────────────────────────────────────────────────
 let BK=[], RS=[];
@@ -1722,11 +1722,7 @@ function updateDataStatus() {
 
 // ── ASYNC LOAD ───────────────────────────────────────────────────────────────
 async function loadFromGAS() {
-  if (!GAS_URL) {
-    GAS_URL = prompt('⚙️ กรุณาใส่ GAS Web App URL:', localStorage.getItem('iks_gas_url')||'');
-    if (!GAS_URL) { showToastError('❌ ยังไม่มี GAS URL — ใช้งานไม่ได้'); return; }
-    localStorage.setItem('iks_gas_url', GAS_URL);
-  }
+  // GAS_URL มี default hardcode — ไม่ต้อง prompt
   showLoading(true);
   try {
     const res = await fetch(GAS_URL + '?type=all');
