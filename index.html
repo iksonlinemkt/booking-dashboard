@@ -1612,90 +1612,88 @@ function getT8Data(){
 }
 
 function buildT8Table(tblId, headId, bodyId, data, groups, mg, sortKey){
-  const rows_data=data.filter(r=>r.mg===mg);
-  // Get unique SCs
-  const scs=[...new Set(rows_data.map(r=>r.sc).filter(Boolean))].sort();
+  const rows_data = data.filter(r => r.mg === mg);
+  const scs = [...new Set(rows_data.map(r => r.sc).filter(Boolean))].sort();
   if(!scs.length){
-    document.getElementById(headId).innerHTML='';
-    document.getElementById(bodyId).innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--mut)">ไม่มีข้อมูล</td></tr>';
+    document.getElementById(headId).innerHTML = '';
+    document.getElementById(bodyId).innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--mut)">ไม่มีข้อมูล</td></tr>';
     return;
   }
-  const isTotCol=(mg==='P-UP')?'t8-tot':'t8-tot-rs';
+  const isTotCol = (mg==='P-UP') ? 't8-tot' : 't8-tot-rs';
 
-  // คำนวณ otherTot ก่อนใช้ใน header
-  const otherTot=scData.reduce((s,s2)=>s+s2.otherCount,0);
-  // Build header — เพิ่ม "อื่นๆ" column ถ้ามี type ไม่ match
-  const showOther=otherTot>0;
-  const otherColIdx=groups.length+1;
-  let hdr=`<tr><th onclick="t8Sort('${tblId}','${sortKey}',0)">SC</th>`;
-  groups.forEach((g,i)=>{hdr+=`<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${i+1})">${g.label}</th>`;});
-  if(showOther) hdr+=`<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${otherColIdx})" style="color:#94a3b8">อื่นๆ</th>`;
-  hdr+=`<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${groups.length+(showOther?2:1)})">รวม</th></tr>`;
-
-  let subhdr='<tr><th></th>';
-  groups.forEach(()=>{subhdr+='<th style="font-size:10px;color:#64748b">จำนวน</th><th style="font-size:10px;color:#94a3b8">%</th>';});
-  if(showOther){subhdr+='<th style="font-size:10px;color:#94a3b8">จำนวน</th><th style="font-size:10px;color:#94a3b8">%</th>';}
-  subhdr+='<th style="font-size:10px;color:#64748b">จำนวน</th><th style="font-size:10px;color:#94a3b8">%</th></tr>';
-  document.getElementById(headId).innerHTML=hdr+subhdr;
-
-  // Build per-SC counts
-  // match type: exact → startsWith → ไม่ match → "อื่นๆ"
-  const matchGroup=(tp,grps)=>{
+  // match type: exact → startsWith
+  const matchGroup = (tp, grps) => {
     if(!tp) return -1;
-    // exact match ก่อน
-    let idx=grps.findIndex(g=>g.types.some(t=>t.toLowerCase()===tp.toLowerCase()));
-    if(idx>=0) return idx;
-    // startsWith match (เช่น "Cab4 HR 1.9" → "Cab4 HR")
-    idx=grps.findIndex(g=>g.types.some(t=>tp.toLowerCase().startsWith(t.toLowerCase())));
-    return idx; // -1 = ไม่ match ใดเลย → อื่นๆ
+    let idx = grps.findIndex(g => g.types.some(t => t.toLowerCase() === tp.toLowerCase()));
+    if(idx >= 0) return idx;
+    idx = grps.findIndex(g => g.types.some(t => tp.toLowerCase().startsWith(t.toLowerCase())));
+    return idx;
   };
-  // นับทุก row ของ mg นั้น รวมถึง type ที่ไม่ match ด้วย
-  const allMgRows=rows_data; // filter mg แล้วตั้งแต่ต้น
-  const scData=scs.map(sc=>{
-    const scRows=allMgRows.filter(r=>r.sc===sc);
-    const grpCounts=groups.map(()=>0);
-    let otherCount=0;
-    scRows.forEach(r=>{
-      const gi=matchGroup(r.tp,groups);
-      if(gi>=0) grpCounts[gi]++;
+
+  // คำนวณ scData ก่อนทุกอย่าง
+  const scData = scs.map(sc => {
+    const scRows = rows_data.filter(r => r.sc === sc);
+    const grpCounts = groups.map(() => 0);
+    let otherCount = 0;
+    scRows.forEach(r => {
+      const gi = matchGroup(r.tp, groups);
+      if(gi >= 0) grpCounts[gi]++;
       else otherCount++;
     });
-    const tot=scRows.length; // นับทุก row จริงๆ
-    return{sc,grpCounts,otherCount,tot};
-  }).filter(s=>s.tot>0).sort((a,b)=>b.tot-a.tot);
+    return {sc, grpCounts, otherCount, tot: scRows.length};
+  }).filter(s => s.tot > 0).sort((a,b) => b.tot - a.tot);
 
-  // Column totals
-  const colTots=groups.map((_,gi)=>scData.reduce((s,s2)=>s+s2.grpCounts[gi],0));
-  const grandTot=scData.reduce((s,s2)=>s+s2.tot,0);
+  // totals
+  const colTots  = groups.map((_,gi) => scData.reduce((s,s2) => s + s2.grpCounts[gi], 0));
+  const otherTot = scData.reduce((s,s2) => s + s2.otherCount, 0);
+  const grandTot = scData.reduce((s,s2) => s + s2.tot, 0);
+  const showOther = otherTot > 0;
+
+  // Build header
+  const otherColIdx = groups.length + 1;
+  let hdr = `<tr><th onclick="t8Sort('${tblId}','${sortKey}',0)">SC</th>`;
+  groups.forEach((g,i) => { hdr += `<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${i+1})">${g.label}</th>`; });
+  if(showOther) hdr += `<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${otherColIdx})" style="color:#94a3b8">อื่นๆ</th>`;
+  hdr += `<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${groups.length+(showOther?2:1)})">รวม</th></tr>`;
+
+  let subhdr = '<tr><th></th>';
+  groups.forEach(() => { subhdr += '<th style="font-size:10px;color:#64748b">จำนวน</th><th style="font-size:10px;color:#94a3b8">%</th>'; });
+  if(showOther) subhdr += '<th style="font-size:10px;color:#94a3b8">จำนวน</th><th style="font-size:10px;color:#94a3b8">%</th>';
+  subhdr += '<th style="font-size:10px;color:#64748b">จำนวน</th><th style="font-size:10px;color:#94a3b8">%</th></tr>';
+  document.getElementById(headId).innerHTML = hdr + subhdr;
 
   // Render rows
-  const bodyRows=scData.map(s=>{
-    const pct=grandTot>0?((s.tot/grandTot)*100).toFixed(1):'0';
-    let cells=`<td data-v="${s.sc}">${s.sc}</td>`;
-    s.grpCounts.forEach(v=>{
-      const p=s.tot>0?((v/s.tot)*100).toFixed(1):'0';
-      cells+=`<td class="t8-num" data-v="${v}">${v||'-'}</td><td class="t8-pct" data-v="${v}">${v?p+'%':''}</td>`;
+  const bodyRows = scData.map(s => {
+    const pct = grandTot > 0 ? ((s.tot/grandTot)*100).toFixed(1) : '0';
+    let cells = `<td data-v="${s.sc}">${s.sc}</td>`;
+    s.grpCounts.forEach(v => {
+      const p = s.tot > 0 ? ((v/s.tot)*100).toFixed(1) : '0';
+      cells += `<td class="t8-num" data-v="${v}">${v||'-'}</td><td class="t8-pct" data-v="${v}">${v?p+'%':''}</td>`;
     });
-    if(showOther){const v=s.otherCount,p=s.tot>0?((v/s.tot)*100).toFixed(1):'0';cells+=`<td class="t8-num" data-v="${v}" style="color:#94a3b8">${v||'-'}</td><td class="t8-pct" data-v="${v}" style="color:#94a3b8">${v?p+'%':''}</td>`;}
-    cells+=`<td class="${isTotCol}" data-v="${s.tot}">${s.tot}</td><td class="t8-pct ${isTotCol}" data-v="${pct}">${pct}%</td>`;
-    return`<tr class="t8-data-row">${cells}</tr>`;
+    if(showOther){
+      const v = s.otherCount, p = s.tot > 0 ? ((v/s.tot)*100).toFixed(1) : '0';
+      cells += `<td class="t8-num" data-v="${v}" style="color:#94a3b8">${v||'-'}</td><td class="t8-pct" data-v="${v}" style="color:#94a3b8">${v?p+'%':''}</td>`;
+    }
+    cells += `<td class="${isTotCol}" data-v="${s.tot}">${s.tot}</td><td class="t8-pct ${isTotCol}" data-v="${pct}">${pct}%</td>`;
+    return `<tr class="t8-data-row">${cells}</tr>`;
   }).join('');
 
   // Sum row
-  let sumCells='<td>รวมทั้งหมด</td>';
-  colTots.forEach((v,gi)=>{
-    const p=grandTot>0?((v/grandTot)*100).toFixed(1):'0';
-    sumCells+=`<td class="t8-num" data-v="${v}">${v||'-'}</td><td class="t8-pct" data-v="${p}">${v?p+'%':''}</td>`;
+  let sumCells = '<td>รวมทั้งหมด</td>';
+  colTots.forEach(v => {
+    const p = grandTot > 0 ? ((v/grandTot)*100).toFixed(1) : '0';
+    sumCells += `<td class="t8-num" data-v="${v}">${v||'-'}</td><td class="t8-pct" data-v="${p}">${v?p+'%':''}</td>`;
   });
-  if(showOther){const p=grandTot>0?((otherTot/grandTot)*100).toFixed(1):'0';sumCells+=`<td class="t8-num" data-v="${otherTot}" style="color:#94a3b8">${otherTot||'-'}</td><td class="t8-pct" data-v="${p}" style="color:#94a3b8">${otherTot?p+'%':''}</td>`;}
-  sumCells+=`<td class="${isTotCol}" data-v="${grandTot}">${grandTot}</td><td class="t8-pct ${isTotCol}">100%</td>`;
-  const sumRow=`<tr class="t8-sum">${sumCells}</tr>`;
+  if(showOther){
+    const p = grandTot > 0 ? ((otherTot/grandTot)*100).toFixed(1) : '0';
+    sumCells += `<td class="t8-num" data-v="${otherTot}" style="color:#94a3b8">${otherTot||'-'}</td><td class="t8-pct" data-v="${p}" style="color:#94a3b8">${otherTot?p+'%':''}</td>`;
+  }
+  sumCells += `<td class="${isTotCol}" data-v="${grandTot}">${grandTot}</td><td class="t8-pct ${isTotCol}">100%</td>`;
+  document.getElementById(bodyId).innerHTML = bodyRows + `<tr class="t8-sum">${sumCells}</tr>`;
 
-  document.getElementById(bodyId).innerHTML=bodyRows+sumRow;
-
-  // Apply sort state if any
-  const st=t8SortState[sortKey];
-  if(st&&st.col>=0) t8Sort(tblId,sortKey,st.col,true);
+  // Apply sort state
+  const st = t8SortState[sortKey];
+  if(st && st.col >= 0) t8Sort(tblId, sortKey, st.col, true);
 }
 
 function t8Sort(tblId,sortKey,colIdx,keepDir){
