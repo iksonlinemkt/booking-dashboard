@@ -1622,6 +1622,8 @@ function buildT8Table(tblId, headId, bodyId, data, groups, mg, sortKey){
   }
   const isTotCol=(mg==='P-UP')?'t8-tot':'t8-tot-rs';
 
+  // คำนวณ otherTot ก่อนใช้ใน header
+  const otherTot=scData.reduce((s,s2)=>s+s2.otherCount,0);
   // Build header — เพิ่ม "อื่นๆ" column ถ้ามี type ไม่ match
   const showOther=otherTot>0;
   const otherColIdx=groups.length+1;
@@ -1664,7 +1666,6 @@ function buildT8Table(tblId, headId, bodyId, data, groups, mg, sortKey){
 
   // Column totals
   const colTots=groups.map((_,gi)=>scData.reduce((s,s2)=>s+s2.grpCounts[gi],0));
-  const otherTot=scData.reduce((s,s2)=>s+s2.otherCount,0);
   const grandTot=scData.reduce((s,s2)=>s+s2.tot,0);
 
   // Render rows
