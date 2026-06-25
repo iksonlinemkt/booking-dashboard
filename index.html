@@ -1041,209 +1041,173 @@ function buildSCTable(secId,pfx,data,FI,isRS,mode){
   const dates=[...new Set(data.map(r=>r[FI.d]).filter(Boolean))].sort();
   if(!dates.length) return;
 
-  // helper: สร้าง th headers
-  function makeThCols(){
-    let th='';
-    dates.forEach(d=>{
-      const dt=new Date(d), lbl=`${dt.getDate()}/${dt.getMonth()+1}`;
-      if(m==='all')      th+=`<th class="thd"><div class="thm mx">${lbl}</div><div class="thm mx">MX</div><div class="thm pp">PP</div></th>`;
-      else if(m==='mux') th+=`<th class="thd"><div class="thm mx">${lbl}</div><div class="thm mx">MX</div></th>`;
-      else               th+=`<th class="thd"><div class="thm pp">${lbl}</div><div class="thm pp">PP</div></th>`;
-    });
-    return th;
-  }
-  function makeGtCols(){
-    if(m==='all')  return '<th class="gmx">MX</th><th class="gpp">PP</th>';
-    if(m==='mux')  return '<th class="gmx">MX รวม</th>';
-    return '<th class="gpp">PP รวม</th>';
-  }
-
-  // helper: render แถว SC
-  function renderSCRow(scName, scCode, scRows, allDates, isResigned){
-    const scMx={}, scPp={};
-    allDates.forEach(d=>{scMx[d]=0;scPp[d]=0;});
-    scRows.forEach(r=>{
-      const d=r[FI.d];if(!d)return;
-      if(r[FI.mg]==='MU-X') scMx[d]=(scMx[d]||0)+1;
-      else if(r[FI.mg]==='P-UP') scPp[d]=(scPp[d]||0)+1;
-    });
-    const tmx=allDates.reduce((s,d)=>s+(scMx[d]||0),0);
-    const tpp=allDates.reduce((s,d)=>s+(scPp[d]||0),0);
-    if(m==='mux'&&!tmx) return '';
-    if(m==='pup'&&!tpp) return '';
-    if(m==='all'&&!tmx&&!tpp) return '';
-    let cells='';
-    allDates.forEach(d=>{
-      const mx=scMx[d]||0, pp=scPp[d]||0;
-      if(m==='all'){
-        if(!mx&&!pp) cells+='<td class="cz">—</td>';
-        else cells+=`<td>${mx?`<span class="cmx">${mx}</span>`:''} ${pp?`<span class="cpp">${pp}</span>`:''}</td>`;
-      } else if(m==='mux'){
-        cells+=mx?`<td><span class="cmx">${mx}</span></td>`:'<td class="cz">—</td>';
-      } else {
-        cells+=pp?`<td><span class="cpp">${pp}</span></td>`:'<td class="cz">—</td>';
-      }
-    });
-    let tot='';
-    if(m==='all')  tot=`<td class="gmx">${tmx||'—'}</td><td class="gpp">${tpp||'—'}</td>`;
-    if(m==='mux')  tot=`<td class="gmx">${tmx||'—'}</td>`;
-    if(m==='pup')  tot=`<td class="gpp">${tpp||'—'}</td>`;
-    const nameStyle=isResigned?'color:#991b1b;':'';
-    return `<tr><td class="sn" style="${nameStyle}">${scName}</td><td class="sc-code" style="font-size:10px;color:#94a3b8;text-align:center">${scCode}</td>${cells}${tot}</tr>`;
-  }
-
-  // helper: render แถวรวม (team หรือ branch)
-  function renderSumRow(label, rowsArr, allDates, style){
-    const sumMx={}, sumPp={};
-    allDates.forEach(d=>{sumMx[d]=0;sumPp[d]=0;});
-    rowsArr.forEach(r=>{
-      const d=r[FI.d];if(!d)return;
-      if(r[FI.mg]==='MU-X') sumMx[d]=(sumMx[d]||0)+1;
-      else if(r[FI.mg]==='P-UP') sumPp[d]=(sumPp[d]||0)+1;
-    });
-    const tmx=allDates.reduce((s,d)=>s+(sumMx[d]||0),0);
-    const tpp=allDates.reduce((s,d)=>s+(sumPp[d]||0),0);
-    let cells='';
-    allDates.forEach(d=>{
-      const mx=sumMx[d]||0, pp=sumPp[d]||0;
-      if(m==='all'){
-        if(!mx&&!pp) cells+='<td class="cz">—</td>';
-        else cells+=`<td>${mx?`<span class="cmx">${mx}</span>`:''} ${pp?`<span class="cpp">${pp}</span>`:''}</td>`;
-      } else if(m==='mux'){
-        cells+=mx?`<td><span class="cmx">${mx}</span></td>`:'<td class="cz">—</td>';
-      } else {
-        cells+=pp?`<td><span class="cpp">${pp}</span></td>`:'<td class="cz">—</td>';
-      }
-    });
-    let tot='';
-    if(m==='all')  tot=`<td class="gmx">${tmx||'—'}</td><td class="gpp">${tpp||'—'}</td>`;
-    if(m==='mux')  tot=`<td class="gmx">${tmx}</td>`;
-    if(m==='pup')  tot=`<td class="gpp">${tpp}</td>`;
-    return `<tr style="${style}"><td class="sn" colspan="2" style="${style}">${label}</td>${cells}${tot}</tr>`;
-  }
-
-  // จัดกลุ่ม data ทั้งหมด → branch → team → scName → rows[]
-  // สาขา FT+HO รวมกัน
-  const normBr = br => (br==='FT'||br==='HO') ? 'FT&HO' : br;
-  const brTeam = {}; // branch → team → scName → rows[]
-  const resigned = {}; // branch → scName → {code, rows[]}
+  // ── จัดกลุ่ม data → branch → team → scName → rows[] ──
+  const normBr=br=>(br==='FT'||br==='HO')?'FT&HO':br;
+  const brTeam={};   // br → team → scName → {code, rows[]}
+  const resigned={};  // br → scName → {code, rows[]}
 
   data.forEach(r=>{
-    const scName = r[FI.sc]||'';
-    const scCode = (FI.cd!==undefined&&FI.cd>=0) ? (r[FI.cd]||'') : '';
-    const rawBr  = r[FI.br]||'?';
-    const br     = normBr(rawBr);
-    const info   = getSCInfo(scName, scCode, rawBr);
-    const team   = info.team||'ลาออก';
-
+    const scName=r[FI.sc]||'';
+    const scCode=(FI.cd!==undefined&&FI.cd>=0)?(r[FI.cd]||''):'';
+    const rawBr=r[FI.br]||'?';
+    const br=normBr(rawBr);
+    const info=getSCInfo(scName,scCode,rawBr);
+    const team=info.team||'ลาออก';
     if(team==='ลาออก'){
-      if(!resigned[br]) resigned[br]={};
-      if(!resigned[br][scName]) resigned[br][scName]={code:info.code||scCode,rows:[]};
+      if(!resigned[br])resigned[br]={};
+      if(!resigned[br][scName])resigned[br][scName]={code:info.code||scCode,rows:[]};
       resigned[br][scName].rows.push(r);
     } else {
-      if(!brTeam[br]) brTeam[br]={};
-      if(!brTeam[br][team]) brTeam[br][team]={};
-      if(!brTeam[br][team][scName]) brTeam[br][team][scName]={code:info.code||scCode,rows:[]};
+      if(!brTeam[br])brTeam[br]={};
+      if(!brTeam[br][team])brTeam[br][team]={};
+      if(!brTeam[br][team][scName])brTeam[br][team][scName]={code:info.code||scCode,rows:[]};
       brTeam[br][team][scName].rows.push(r);
     }
   });
 
-  // ลำดับสาขา: SR → BS → BN → KS → FT&HO → (resigned ท้ายสุด)
-  const BR_DISPLAY = ['SR','BS','BN','KS','FT&HO'];
-  const allBrs = [...new Set([...Object.keys(brTeam),...Object.keys(resigned)])];
-  const orderedBrs = [
-    ...BR_DISPLAY.filter(b=>allBrs.includes(b)),
-    ...allBrs.filter(b=>!BR_DISPLAY.includes(b)).sort()
-  ];
-
-  const thCols=makeThCols(), gtCols=makeGtCols();
-  // thead มี col SC + Code + dates + total
-  const scColspan=2; // SC name + Code
-  const thead=`<thead>
-    <tr><th class="sn ${isRS?'rs':''}" colspan="${scColspan}">${isRS?'💰 SC Team / ชื่อ':'👤 SC Team / ชื่อ'}</th>${thCols}${gtCols}</tr>
-  </thead>`;
-
-  orderedBrs.forEach(br=>{
-    const brRows = data.filter(r=>normBr(r[FI.br]||'?')===br);
-    const mxT=brRows.filter(r=>r[FI.mg]==='MU-X').length;
-    const ppT=brRows.filter(r=>r[FI.mg]==='P-UP').length;
-    const brLabel = br==='FT&HO' ? '🏢 FT & HO' : `🏢 สาขา ${br} — ${{'SR':'ศรีนครินทร์','BS':'บางเสาธง','BN':'บางนา','KS':'เกษตร'}[br]||br}`;
-
-    let tbody='';
-    // Branch header row
-    tbody+=`<tr class="br-hdr-main" style="background:#1a3a5c;color:#fff">
-      <td colspan="${scColspan}" style="font-weight:800;font-size:13px;padding:8px 14px">${brLabel}</td>
-      ${dates.map(()=>'<td></td>').join('')}
-      ${m==='all'?`<td class="bk-sum" style="background:#1e40af;color:#fff;text-align:center;font-weight:800">${mxT}</td><td class="rs-sum" style="background:#166534;color:#fff;text-align:center;font-weight:800">${ppT}</td>`:
-        m==='mux'?`<td class="bk-sum" style="background:#1e40af;color:#fff;text-align:center;font-weight:800">${mxT}</td>`:
-        `<td class="rs-sum" style="background:#166534;color:#fff;text-align:center;font-weight:800">${ppT}</td>`}
-    </tr>`;
-
-    // Teams
-    if(brTeam[br]){
-      const teams = brTeam[br];
-      const orderedTeams=[
-        ...TEAM_ORDER.filter(t=>teams[t]),
-        ...Object.keys(teams).filter(t=>!TEAM_ORDER.includes(t)).sort()
-      ];
-      orderedTeams.forEach(team=>{
-        const scMap = teams[team];
-        const teamRows = Object.values(scMap).flatMap(v=>v.rows);
-        // Team header
-        tbody+=renderSumRow(
-          `<span style="background:#0d9488;color:#fff;border-radius:4px;padding:1px 9px;font-size:11px;font-weight:800;margin-right:6px">ทีม ${team}</span>`,
-          teamRows, dates,
-          'background:#e8f5f0;font-weight:800;font-size:12px'
-        );
-        // SC rows sorted by name
-        Object.entries(scMap).sort((a,b)=>a[0].localeCompare(b[0],'th')).forEach(([scName,v])=>{
-          tbody+=renderSCRow(scName, v.code, v.rows, dates, false);
-        });
-      });
+  // ── helpers ──
+  function cellVal(mx,pp){
+    if(m==='all'){
+      if(!mx&&!pp) return '<td class="cz">—</td>';
+      return `<td>${mx?`<span class="cmx">${mx}</span>`:''} ${pp?`<span class="cpp">${pp}</span>`:''}</td>`;
     }
+    if(m==='mux') return mx?`<td><span class="cmx">${mx}</span></td>`:'<td class="cz">—</td>';
+    return pp?`<td><span class="cpp">${pp}</span></td>`:'<td class="cz">—</td>';
+  }
+  function totCell(mx,pp,cls){
+    if(m==='all')  return `<td class="${cls||'gmx'}">${mx||'—'}</td><td class="${cls?cls+' gpp':'gpp'}">${pp||'—'}</td>`;
+    if(m==='mux')  return `<td class="${cls||'gmx'}">${mx||'—'}</td>`;
+    return `<td class="${cls||'gpp'}">${pp||'—'}</td>`;
+  }
+  function countRows(rows){
+    const mx={},pp={};
+    dates.forEach(d=>{mx[d]=0;pp[d]=0;});
+    rows.forEach(r=>{const d=r[FI.d];if(!d)return;if(r[FI.mg]==='MU-X')mx[d]++;else if(r[FI.mg]==='P-UP')pp[d]++;});
+    const tmx=dates.reduce((s,d)=>s+mx[d],0);
+    const tpp=dates.reduce((s,d)=>s+pp[d],0);
+    return{mx,pp,tmx,tpp};
+  }
 
-    sec.appendChild((() => {
-      const blk=document.createElement('div'); blk.className='bblk';
-      blk.innerHTML=`<div class="twrap"><table class="st">${thead}<tbody>${tbody}</tbody></table></div>`;
-      return blk;
-    })());
+  // ── build thead ──
+  let thDate='';
+  dates.forEach(d=>{
+    const dt=new Date(d),lbl=`${dt.getDate()}/${dt.getMonth()+1}`;
+    if(m==='all')      thDate+=`<th class="thd"><div class="thm mx">${lbl}</div><div class="thm mx">MX</div><div class="thm pp">PP</div></th>`;
+    else if(m==='mux') thDate+=`<th class="thd"><div class="thm mx">${lbl}</div><div class="thm mx">MX</div></th>`;
+    else               thDate+=`<th class="thd"><div class="thm pp">${lbl}</div><div class="thm pp">PP</div></th>`;
   });
+  const gtCols=m==='all'?'<th class="gmx">MX</th><th class="gpp">PP</th>':
+               m==='mux'?'<th class="gmx">MX รวม</th>':'<th class="gpp">PP รวม</th>';
+  const scLabel=isRS?'💰 SC Team / ชื่อ':'👤 SC Team / ชื่อ';
+  const thead=`<thead><tr>
+    <th class="sn ${isRS?'rs':''}" style="min-width:180px">${scLabel}</th>
+    <th style="min-width:60px;font-size:10px;color:#94a3b8;text-align:center">Code</th>
+    ${thDate}${gtCols}
+  </tr></thead>`;
 
-  // ── พนักงานลาออก (ท้ายสุด) ──
-  const resAllBrs = Object.keys(resigned).sort();
-  if(!resAllBrs.length) return;
+  // ── build tbody ──
+  const BR_DISPLAY=['SR','BS','BN','KS','FT&HO'];
+  const allBrs=[...new Set([...Object.keys(brTeam),...Object.keys(resigned)])];
+  const orderedBrs=[
+    ...BR_DISPLAY.filter(b=>allBrs.includes(b)),
+    ...allBrs.filter(b=>!BR_DISPLAY.includes(b)&&b!=='?').sort(),
+    ...allBrs.filter(b=>b==='?')
+  ];
+  const totalCols=2+dates.length+(m==='all'?2:1);
+  let tbody='';
 
-  const resBlk=document.createElement('div'); resBlk.className='bblk';
-  let resTbody='';
-  // Section header
-  resTbody+=`<tr style="background:#991b1b;color:#fff">
-    <td colspan="${scColspan+dates.length+(m==='all'?2:1)}" style="font-weight:800;font-size:13px;padding:8px 14px">
-      👋 พนักงานลาออก
-    </td>
-  </tr>`;
+  // สาขาปกติ
+  orderedBrs.forEach(br=>{
+    if(!brTeam[br]) return;
+    const brAllRows=Object.values(brTeam[br]).flatMap(tm=>Object.values(tm).flatMap(v=>v.rows));
+    const brC=countRows(brAllRows);
+    const brName={'SR':'ศรีนครินทร์','BS':'บางเสาธง','BN':'บางนา','KS':'เกษตร','FT&HO':'Fleet & HO'}[br]||br;
 
-  resAllBrs.forEach(br=>{
-    const scMap=resigned[br];
-    const brRows=Object.values(scMap).flatMap(v=>v.rows);
-    const mxT=brRows.filter(r=>r[FI.mg]==='MU-X').length;
-    const ppT=brRows.filter(r=>r[FI.mg]==='P-UP').length;
-    // Branch sub-header
-    resTbody+=`<tr style="background:#fee2e2">
-      <td colspan="${scColspan}" style="font-weight:700;font-size:12px;padding:6px 14px;color:#7f1d1d">
-        สาขา ${br}
+    // branch header row
+    tbody+=`<tr style="background:#1a3a5c;color:#fff">
+      <td colspan="${totalCols}" style="font-weight:800;font-size:13px;padding:8px 14px">
+        🏢 ${br==='FT&HO'?'FT & HO':br} — ${brName}
+        <span style="float:right;font-size:12px;font-weight:400;opacity:.85">MU-X: <b>${brC.tmx}</b> &nbsp;|&nbsp; P-UP: <b>${brC.tpp}</b> &nbsp;|&nbsp; รวม: <b>${brC.tmx+brC.tpp}</b></span>
       </td>
-      ${dates.map(()=>'<td></td>').join('')}
-      ${m==='all'?`<td class="gmx" style="color:#7f1d1d">${mxT||'—'}</td><td class="gpp" style="color:#7f1d1d">${ppT||'—'}</td>`:
-        m==='mux'?`<td class="gmx" style="color:#7f1d1d">${mxT||'—'}</td>`:
-        `<td class="gpp" style="color:#7f1d1d">${ppT||'—'}</td>`}
     </tr>`;
-    Object.entries(scMap).sort((a,b)=>a[0].localeCompare(b[0],'th')).forEach(([scName,v])=>{
-      resTbody+=renderSCRow(scName, v.code, v.rows, dates, true);
+
+    // เรียงทีม
+    const teams=brTeam[br];
+    const orderedTeams=[
+      ...TEAM_ORDER.filter(t=>teams[t]),
+      ...Object.keys(teams).filter(t=>!TEAM_ORDER.includes(t)).sort()
+    ];
+
+    orderedTeams.forEach(team=>{
+      const scMap=teams[team];
+      const tmAllRows=Object.values(scMap).flatMap(v=>v.rows);
+      const tmC=countRows(tmAllRows);
+
+      // team header row
+      tbody+=`<tr style="background:#e8f5f0">
+        <td colspan="2" style="font-weight:800;font-size:12px;padding:6px 14px">
+          <span style="background:#0d9488;color:#fff;border-radius:4px;padding:1px 9px;font-size:11px;font-weight:800;margin-right:6px">ทีม ${team}</span>
+          <span style="font-size:11px;color:#64748b">MU-X: ${tmC.tmx} | P-UP: ${tmC.tpp} | รวม: ${tmC.tmx+tmC.tpp}</span>
+        </td>
+        ${dates.map(d=>cellVal(tmC.mx[d],tmC.pp[d])).join('')}
+        ${totCell(tmC.tmx,tmC.tpp,'gmx')}
+      </tr>`;
+
+      // SC rows
+      Object.entries(scMap).sort((a,b)=>a[0].localeCompare(b[0],'th')).forEach(([scName,v])=>{
+        const sc=countRows(v.rows);
+        if(m==='mux'&&!sc.tmx) return;
+        if(m==='pup'&&!sc.tpp) return;
+        if(m==='all'&&!sc.tmx&&!sc.tpp) return;
+        tbody+=`<tr>
+          <td class="sn" style="padding-left:22px">${scName}</td>
+          <td style="font-size:10px;color:#94a3b8;text-align:center">${v.code}</td>
+          ${dates.map(d=>cellVal(sc.mx[d],sc.pp[d])).join('')}
+          ${totCell(sc.tmx,sc.tpp)}
+        </tr>`;
+      });
     });
   });
 
-  resBlk.innerHTML=`<div class="twrap"><table class="st">${thead}<tbody>${resTbody}</tbody></table></div>`;
-  sec.appendChild(resBlk);
+  // ── พนักงานลาออก (ท้ายสุด) ──
+  const resAllBrs=Object.keys(resigned).sort();
+  if(resAllBrs.length){
+    tbody+=`<tr style="background:#991b1b;color:#fff">
+      <td colspan="${totalCols}" style="font-weight:800;font-size:13px;padding:8px 14px">👋 พนักงานลาออก</td>
+    </tr>`;
+    resAllBrs.forEach(br=>{
+      const scMap=resigned[br];
+      const brAllRows=Object.values(scMap).flatMap(v=>v.rows);
+      const brC=countRows(brAllRows);
+      // branch sub-header
+      tbody+=`<tr style="background:#fee2e2">
+        <td colspan="2" style="font-weight:700;font-size:12px;padding:6px 14px;color:#7f1d1d">
+          สาขา ${br}
+          <span style="font-size:11px;font-weight:400;margin-left:10px">MU-X: ${brC.tmx} | P-UP: ${brC.tpp} | รวม: ${brC.tmx+brC.tpp}</span>
+        </td>
+        ${dates.map(d=>cellVal(brC.mx[d],brC.pp[d])).join('')}
+        ${totCell(brC.tmx,brC.tpp,'gmx')}
+      </tr>`;
+      Object.entries(scMap).sort((a,b)=>a[0].localeCompare(b[0],'th')).forEach(([scName,v])=>{
+        const sc=countRows(v.rows);
+        if(m==='mux'&&!sc.tmx) return;
+        if(m==='pup'&&!sc.tpp) return;
+        if(m==='all'&&!sc.tmx&&!sc.tpp) return;
+        tbody+=`<tr>
+          <td class="sn" style="padding-left:22px;color:#991b1b">${scName}</td>
+          <td style="font-size:10px;color:#94a3b8;text-align:center">${v.code}</td>
+          ${dates.map(d=>cellVal(sc.mx[d],sc.pp[d])).join('')}
+          ${totCell(sc.tmx,sc.tpp)}
+        </tr>`;
+      });
+    });
+  }
+
+  // ── render single table ──
+  const blk=document.createElement('div');
+  blk.className='bblk';
+  blk.innerHTML=`<div class="twrap"><table class="st">${thead}<tbody>${tbody}</tbody></table></div>`;
+  sec.appendChild(blk);
 }
 
 
@@ -1396,6 +1360,203 @@ const TEAM_MAP={
   "A0055":"KS","A5199":"KS"
 };
 const BR_NAME={"BN":"บางนา","BS":"บางเสาธง","KS":"เกษตร","SR":"ศรีนครินทร์","FT":"ฝ่ายทดสอบ","HO":"สำนักงานใหญ่"};
+
+function initSC6(){
+  // Set default date range: first and last date in data
+  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
+  if(allDates.length){
+    $('sc6From').value=allDates[0];
+    $('sc6To').value=allDates[allDates.length-1];
+  }
+}
+function resetSC6(){
+  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
+  if(allDates.length){
+    $('sc6From').value=allDates[0];
+    $('sc6To').value=allDates[allDates.length-1];
+  }
+  renderSC6();
+}
+function getSC6Data(){
+  const from=$('sc6From').value, to=$('sc6To').value;
+  const bk=BK.filter(r=>{
+    const d=r[BF.d]||'';
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    return true;
+  });
+  const rs=RS.filter(r=>{
+    const d=r[RF.d]||'';
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    return true;
+  });
+  return{bk,rs};
+}
+
+function renderSC6(){
+  const{bk,rs}=getSC6Data();
+  const mos=[...new Set([...bk.map(r=>r[BF.d]?.slice(0,7)),...rs.map(r=>r[RF.d]?.slice(0,7))].filter(Boolean))].sort();
+  const moCount=mos.length||1;
+
+  // จัดกลุ่ม SC โดยใช้ getSCInfo
+  // br → team → scCode → {name, code, bk:[], rs:[]}
+  const normBr=br=>(br==='FT'||br==='HO')?'FT&HO':br;
+  const brTeam={};
+  const resigned={};
+
+  // BK
+  bk.forEach(r=>{
+    const nm=r[BF.sc]||'', cd=r[BF.cd]||'';
+    const rawBr=r[BF.br]||'?', br=normBr(rawBr);
+    const info=getSCInfo(nm,cd,rawBr);
+    const team=info.team||'ลาออก';
+    const key=cd||nm;
+    if(team==='ลาออก'){
+      if(!resigned[br])resigned[br]={};
+      if(!resigned[br][key])resigned[br][key]={name:info.name||nm,code:cd,bk:[],rs:[]};
+      resigned[br][key].bk.push(r);
+    } else {
+      if(!brTeam[br])brTeam[br]={};
+      if(!brTeam[br][team])brTeam[br][team]={};
+      if(!brTeam[br][team][key])brTeam[br][team][key]={name:info.name||nm,code:cd,bk:[],rs:[]};
+      brTeam[br][team][key].bk.push(r);
+    }
+  });
+
+  // RS — match by name
+  const nameToKey={};
+  Object.values(brTeam).forEach(tm=>Object.values(tm).forEach(scMap=>
+    Object.entries(scMap).forEach(([key,v])=>{
+      const k=(v.name||'').replace(/\s+/g,' ').trim().toLowerCase();
+      if(k)nameToKey[k]=key;
+    })
+  ));
+  rs.forEach(r=>{
+    const nm=String(r[RF.sc]||'').replace(/\xa0/g,' ').trim();
+    const rawBr=r[RF.br]||'?', br=normBr(rawBr);
+    const info=getSCInfo(nm,'',rawBr);
+    const team=info.team||'ลาออก';
+    const key=info.code||nm;
+    if(team==='ลาออก'){
+      if(!resigned[br])resigned[br]={};
+      if(!resigned[br][key])resigned[br][key]={name:info.name||nm,code:info.code||'',bk:[],rs:[]};
+      resigned[br][key].rs.push(r);
+    } else {
+      if(!brTeam[br])brTeam[br]={};
+      if(!brTeam[br][team])brTeam[br][team]={};
+      if(!brTeam[br][team][key])brTeam[br][team][key]={name:info.name||nm,code:info.code||'',bk:[],rs:[]};
+      brTeam[br][team][key].rs.push(r);
+    }
+  });
+
+  // ── build thead ──
+  let h1=`<tr class="h1">
+    <th rowspan="2" style="text-align:left;min-width:180px;padding:8px 12px">SC Team / ชื่อ</th>
+    <th rowspan="2" style="min-width:60px;font-size:10px">Code</th>`;
+  mos.forEach(m=>{h1+=`<th colspan="2" style="min-width:80px">${mLabel(m)}</th>`;});
+  h1+=`<th colspan="2" style="min-width:80px;background:#1e3a8a">รวม</th>
+    <th rowspan="2" style="min-width:72px;background:#6d28d9;color:#fff;font-size:11px">เฉลี่ยขาย/<br>เดือน</th></tr>`;
+  let h2='<tr class="h2">';
+  mos.forEach(()=>{h2+='<th class="bk-h">BK</th><th class="rs-h">RS</th>';});
+  h2+='<th class="bk-h" style="background:#1e40af;color:#fff">BK</th><th class="rs-h" style="background:#166534;color:#fff">RS</th></tr>';
+  $('sc6Head').innerHTML=h1+h2;
+
+  // helpers
+  const totalCols=2+mos.length*2+3;
+  function countSC(v){
+    const moBK={},moRS={};
+    mos.forEach(m=>{moBK[m]=0;moRS[m]=0;});
+    v.bk.forEach(r=>{const m=r[BF.d]?.slice(0,7);if(m&&moBK[m]!==undefined)moBK[m]++;});
+    v.rs.forEach(r=>{const m=r[RF.d]?.slice(0,7);if(m&&moRS[m]!==undefined)moRS[m]++;});
+    return{moBK,moRS,totBK:v.bk.length,totRS:v.rs.length};
+  }
+  function scRow(v,indent,style){
+    const sc=countSC(v);
+    const avg=(sc.totRS/moCount).toFixed(1);
+    let cells=`<td class="sc-name" style="padding-left:${indent}px;${style||''}">${v.name}</td>
+      <td class="sc-code">${v.code}</td>`;
+    mos.forEach(m=>{
+      const bkv=sc.moBK[m]||0, rsv=sc.moRS[m]||0;
+      cells+=`<td class="bk-val${!bkv?' zero':''}">${bkv||'-'}</td><td class="rs-val${!rsv?' zero':''}">${rsv||'-'}</td>`;
+    });
+    cells+=`<td class="tot-bk">${sc.totBK||'-'}</td><td class="tot-rs">${sc.totRS||'-'}</td>
+      <td class="avg-rs">${avg}</td>`;
+    return `<tr>${cells}</tr>`;
+  }
+  function sumRow(label,bkRows,rsRows,style,colspan2style){
+    const moBK={},moRS={};
+    mos.forEach(m=>{moBK[m]=0;moRS[m]=0;});
+    bkRows.forEach(r=>{const m=r[BF.d]?.slice(0,7);if(m&&moBK[m]!==undefined)moBK[m]++;});
+    rsRows.forEach(r=>{const m=r[RF.d]?.slice(0,7);if(m&&moRS[m]!==undefined)moRS[m]++;});
+    const totBK=bkRows.length,totRS=rsRows.length;
+    const avg=(totRS/moCount).toFixed(1);
+    let cells=`<td colspan="2" style="${colspan2style||style||''}">${label}</td>`;
+    mos.forEach(m=>{
+      cells+=`<td class="bk-sum">${moBK[m]||0}</td><td class="rs-sum">${moRS[m]||0}</td>`;
+    });
+    cells+=`<td class="bk-sum">${totBK}</td><td class="rs-sum">${totRS}</td>
+      <td style="background:#4c1d95;color:#e9d5ff;font-weight:800;text-align:center">${avg}</td>`;
+    return `<tr style="${style||''}">${cells}</tr>`;
+  }
+
+  // ── build tbody ──
+  const BR_DISPLAY=['SR','BS','BN','KS','FT&HO'];
+  const allBrs=[...new Set([...Object.keys(brTeam),...Object.keys(resigned)])];
+  const orderedBrs=[...BR_DISPLAY.filter(b=>allBrs.includes(b)),...allBrs.filter(b=>!BR_DISPLAY.includes(b)).sort()];
+  let html='';
+
+  orderedBrs.forEach(br=>{
+    if(!brTeam[br]) return;
+    const brName={'SR':'ศรีนครินทร์','BS':'บางเสาธง','BN':'บางนา','KS':'เกษตร','FT&HO':'Fleet & HO'}[br]||br;
+    const brAllBK=Object.values(brTeam[br]).flatMap(tm=>Object.values(tm).flatMap(v=>v.bk));
+    const brAllRS=Object.values(brTeam[br]).flatMap(tm=>Object.values(tm).flatMap(v=>v.rs));
+
+    // Branch header
+    html+=`<tr><td colspan="${totalCols}" style="background:#1a3a5c;color:#fff;font-weight:800;font-size:13px;padding:8px 14px">
+      🏢 ${br==='FT&HO'?'FT & HO':br} — ${brName}
+      <span style="float:right;font-size:12px;font-weight:400;opacity:.85">BK รวม: <b>${brAllBK.length}</b> &nbsp;|&nbsp; RS รวม: <b>${brAllRS.length}</b></span>
+    </td></tr>`;
+
+    const teams=brTeam[br];
+    const orderedTeams=[...TEAM_ORDER.filter(t=>teams[t]),...Object.keys(teams).filter(t=>!TEAM_ORDER.includes(t)).sort()];
+
+    orderedTeams.forEach(team=>{
+      const scMap=teams[team];
+      const tmBK=Object.values(scMap).flatMap(v=>v.bk);
+      const tmRS=Object.values(scMap).flatMap(v=>v.rs);
+      // Team header
+      html+=sumRow(
+        `<span style="background:#0d9488;color:#fff;border-radius:4px;padding:1px 9px;font-size:11px;font-weight:800">ทีม ${team}</span>`,
+        tmBK,tmRS,
+        'background:#e8f5f0;font-weight:800',
+        'background:#e8f5f0;font-weight:800;font-size:12px;padding:6px 14px'
+      );
+      // SC rows
+      Object.entries(scMap).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','th')).forEach(([,v])=>{
+        html+=scRow(v,22,'');
+      });
+    });
+  });
+
+  // พนักงานลาออก
+  const resAllBrs=Object.keys(resigned).sort();
+  if(resAllBrs.length){
+    html+=`<tr><td colspan="${totalCols}" style="background:#991b1b;color:#fff;font-weight:800;font-size:13px;padding:8px 14px">👋 พนักงานลาออก</td></tr>`;
+    resAllBrs.forEach(br=>{
+      const scMap=resigned[br];
+      const brBK=Object.values(scMap).flatMap(v=>v.bk);
+      const brRS=Object.values(scMap).flatMap(v=>v.rs);
+      html+=sumRow(`สาขา ${br}`,brBK,brRS,'background:#fee2e2','background:#fee2e2;font-weight:700;color:#7f1d1d;padding:6px 14px');
+      Object.entries(scMap).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','th')).forEach(([,v])=>{
+        html+=scRow(v,22,'color:#991b1b');
+      });
+    });
+  }
+
+  $('sc6Body').innerHTML=html;
+}
+
 
 function initSC6(){
   // Set default date range: first and last date in data
