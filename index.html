@@ -668,7 +668,7 @@ const PAL=['#1a3a5c','#e84c1e','#1db87a','#f5a623','#7b5ea7','#3a86ff','#f72585'
 
 // ── GAS CONFIG ────────────────────────────────────────────────────────────────
 // วาง GAS Web App URL ที่นี่ หรือจะใส่ผ่าน popup เมื่อเปิดหน้าแรก
-let GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/macros/s/AKfycbwfAsD_wr2ZIo5xlBknSQURculpjhaPDeglqAj1zizXjXO4PDT0Lj-iHt9C6M5_7tlTKQ/exec';
+let GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/macros/s/AKfycbxI76rbWm7SWxgRLBHGoa6y33MBgYDO3i9qH9cM-Y2yroVzkFuRxXo63iU8Q9SC3OnKkw/exec';
 
 // ── EMPTY INITIAL ARRAYS ─────────────────────────────────────────────────────
 let BK=[], RS=[];
@@ -751,10 +751,19 @@ $('bkBr').addEventListener('change',()=>{
   const b=$('bkBr').value;
   setOpts('bkSC',[...new Set((b?BK.filter(r=>r[BF.br]===b):BK).map(r=>r[BF.sc]).filter(Boolean))].sort());
 });
+function toYMD(v){
+  // แปลง input date value → YYYY-MM-DD เสมอ
+  if(!v)return '';
+  // MM/DD/YYYY → YYYY-MM-DD
+  const m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m)return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  return v.slice(0,10);
+}
 function getBK(){
-  const from=$('bkFrom').value,to=$('bkTo').value,br=$('bkBr').value,sc=$('bkSC').value;
+  const from=toYMD($('bkFrom').value),to=toYMD($('bkTo').value);
+  const br=$('bkBr').value,sc=$('bkSC').value;
   return BK.filter(r=>{
-    const d=r[BF.d]||'';
+    const d=(r[BF.d]||'').slice(0,10);
     if(from&&d<from)return false;
     if(to&&d>to)return false;
     if(br&&r[BF.br]!==br)return false;
@@ -800,9 +809,10 @@ $('rsBr').addEventListener('change',()=>{
   setOpts('rsSC',[...new Set((b?RS.filter(r=>r[RF.br]===b):RS).map(r=>r[RF.sc]).filter(Boolean))].sort());
 });
 function getRS(){
-  const from=$('rsFrom').value,to=$('rsTo').value,br=$('rsBr').value,sc=$('rsSC').value;
+  const from=toYMD($('rsFrom').value),to=toYMD($('rsTo').value);
+  const br=$('rsBr').value,sc=$('rsSC').value;
   return RS.filter(r=>{
-    const d=r[RF.d]||'';
+    const d=(r[RF.d]||'').slice(0,10);
     if(from&&d<from)return false;
     if(to&&d>to)return false;
     if(br&&r[RF.br]!==br)return false;
