@@ -620,10 +620,9 @@ let GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/
 
 // ── EMPTY INITIAL ARRAYS ─────────────────────────────────────────────────────
 let BK=[], RS=[];
-let SC_DATA=[];   // [{name,code,branch,team}] จาก GAS
-let SC_MAP={};    // code→{name,branch,team}
-let SC_NAME_MAP={}; // normalizedName→{code,branch,team}
-
+let SC_DATA=[];
+let SC_MAP={};
+let SC_NAME_MAP={};
 const TEAM_ORDER=['S','A','B','C','D'];
 const BR_ORDER_DEFAULT=['SR','BS','BN','KS','FT','HO'];
 
@@ -636,7 +635,6 @@ function buildSCIndex(){
     if(key) SC_NAME_MAP[key]={name,code,branch,team};
   });
 }
-
 function getSCInfo(scName,scCode,fallbackBranch){
   if(scCode&&SC_MAP[scCode]) return SC_MAP[scCode];
   const key=(scName||'').replace(/\s+/g,' ').trim().toLowerCase();
@@ -1007,215 +1005,247 @@ function renderRS4(d){
 }
 
 // ── BRANCH CHARTS (Tab 2/4) ──────────────────────────────────────────────────
-// สร้างกราฟ bar chart MU-X/P-UP รายวัน
-function makeDailyChart(cid, dates, data, FI, isRS){
-  const mxD={},ppD={};dates.forEach(d=>{mxD[d]=0;ppD[d]=0;});
-  data.forEach(r=>{const d=r[FI.d];if(!d||!dates.includes(d))return;if(r[FI.mg]==='MU-X')mxD[d]++;else if(r[FI.mg]==='P-UP')ppD[d]++;});
-  const lbls=dates.map(d=>{const dt=new Date(d);return `${dt.getDate()}/${dt.getMonth()+1}`;});
-  if(CH[cid]){CH[cid].destroy();delete CH[cid];}
-  const el=document.getElementById(cid);if(!el)return;
-  CH[cid]=new Chart(el.getContext('2d'),{
-    type:'bar',
-    data:{labels:lbls,datasets:[
-      {label:'MU-X',data:dates.map(d=>mxD[d]),backgroundColor:'#1a3a5cbb',borderColor:'#1a3a5c',borderWidth:1,borderRadius:2,stack:'s'},
-      {label:'P-UP',data:dates.map(d=>ppD[d]),backgroundColor:'#e84c1ebb',borderColor:'#e84c1e',borderWidth:1,borderRadius:2,stack:'s'},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}}},
-      scales:{x:{stacked:true,ticks:{font:{size:9},maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},grid:{color:'#eee'}}}}
-  });
-}
-
 function buildBranchCharts(gridId,pfx,data,FI,isRS){
   const grid=$(gridId);grid.innerHTML='';
+  const brs=[...new Set(data.map(r=>r[FI.br]).filter(Boolean))].sort();
   const dates=[...new Set(data.map(r=>r[FI.d]).filter(Boolean))].sort();
-
-  // กำหนด branch order ตาม BR_ORDER_DEFAULT
-  const rawBrs=[...new Set(data.map(r=>r[FI.br]).filter(Boolean))];
-  const brs=BR_ORDER_DEFAULT.filter(b=>rawBrs.includes(b)).concat(rawBrs.filter(b=>!BR_ORDER_DEFAULT.includes(b)).sort());
-
   brs.forEach(br=>{
     const bd=data.filter(r=>r[FI.br]===br);
     const mxT=bd.filter(r=>r[FI.mg]==='MU-X').length;
     const ppT=bd.filter(r=>r[FI.mg]==='P-UP').length;
-    const tot=mxT+ppT;
-
-    // ── สาขา card wrapper ──
-    const wrap=document.createElement('div');
-    wrap.style.cssText='margin-bottom:24px;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;';
-
-    // header สาขา + กราฟรวม
     const cid=pfx+'_'+br;
-    wrap.innerHTML=`
-      <div style="background:var(--pri);color:#fff;padding:10px 16px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:10px">
-        ${isRS?'💰':'🏢'} สาขา ${br} — ${BR_NAME[br]||''}
-        <span style="margin-left:auto;font-size:12px;font-weight:400;opacity:.85">รวม <b>${tot}</b> &nbsp;|&nbsp; MU-X: <b>${mxT}</b> &nbsp;|&nbsp; P-UP: <b>${ppT}</b></span>
-      </div>
-      <div style="padding:10px 14px;background:#f8fafc;">
-        <div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:4px">📈 ภาพรวมสาขา</div>
-        <div style="height:90px"><canvas id="${cid}"></canvas></div>
-      </div>`;
-    grid.appendChild(wrap);
-    makeDailyChart(cid, dates, bd, FI, isRS);
-
-    // ── แยกทีม ──
-    // จัดกลุ่ม SC ตามทีม โดยใช้ getSCInfo
-    const scFI = isRS ? FI.sc : FI.sc;
-    const cdFI = isRS ? -1 : FI.cd; // BK มี scCode, RS ไม่มี
-
-    const teamRows={}; // team → rows[]
-    const resigned={};  // branch → rows[] (พนักงานลาออก แบ่งตามสาขาใน SC sheet)
-
-    bd.forEach(r=>{
-      const nm = r[scFI]||'';
-      const cd = cdFI>=0 ? (r[cdFI]||'') : '';
-      const info = getSCInfo(nm, cd, br);
-      const team = info.team||'ลาออก';
-      if(team==='ลาออก'){
-        const resBr = info.branch||br;
-        if(!resigned[resBr])resigned[resBr]=[];
-        resigned[resBr].push(r);
-      } else {
-        if(!teamRows[team])teamRows[team]=[];
-        teamRows[team].push(r);
-      }
+    const card=document.createElement('div');
+    card.className='bcc'+(isRS?' rs':'');
+    card.innerHTML=`<div class="bcn">${isRS?'💰':'🏢'} สาขา ${br}</div><div class="bcs">รวม <b>${mxT+ppT}</b>&nbsp;|&nbsp;<span class="mx">MU-X: ${mxT}</span>&nbsp;|&nbsp;<span class="pp">P-UP: ${ppT}</span></div><div class="bcw"><canvas id="${cid}"></canvas></div>`;
+    grid.appendChild(card);
+    const mxD={},ppD={};dates.forEach(d=>{mxD[d]=0;ppD[d]=0;});
+    bd.forEach(r=>{const d=r[FI.d];if(!d||!dates.includes(d))return;if(r[FI.mg]==='MU-X')mxD[d]++;else if(r[FI.mg]==='P-UP')ppD[d]++;});
+    const lbls=dates.map(d=>{const dt=new Date(d);return `${dt.getDate()}/${dt.getMonth()+1}`;});
+    CH[cid]=new Chart(document.getElementById(cid).getContext('2d'),{
+      type:'bar',
+      data:{labels:lbls,datasets:[
+        {label:'MU-X',data:dates.map(d=>mxD[d]),backgroundColor:'#1a3a5cbb',borderColor:'#1a3a5c',borderWidth:1,borderRadius:2,stack:'s'},
+        {label:'P-UP',data:dates.map(d=>ppD[d]),backgroundColor:'#e84c1ebb',borderColor:'#e84c1e',borderWidth:1,borderRadius:2,stack:'s'},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}}},
+        scales:{x:{stacked:true,ticks:{font:{size:9},maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},grid:{color:'#eee'}}}}
     });
-
-    // เรียงทีมตาม TEAM_ORDER
-    const orderedTeams=TEAM_ORDER.filter(t=>teamRows[t]).concat(Object.keys(teamRows).filter(t=>!TEAM_ORDER.includes(t)).sort());
-
-    orderedTeams.forEach(team=>{
-      const td=teamRows[team];
-      const tmx=td.filter(r=>r[FI.mg]==='MU-X').length;
-      const tpp=td.filter(r=>r[FI.mg]==='P-UP').length;
-      const tcid=pfx+'_'+br+'_tm'+team;
-      const tmDiv=document.createElement('div');
-      tmDiv.style.cssText='border-top:1px solid var(--border);padding:8px 14px;background:#fff;';
-      tmDiv.innerHTML=`
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <span style="background:#0d9488;color:#fff;border-radius:4px;padding:1px 9px;font-size:11px;font-weight:800">ทีม ${team}</span>
-          <span style="font-size:12px;color:var(--mut)">รวม <b style="color:var(--txt)">${tmx+tpp}</b> &nbsp;|&nbsp; MU-X: <b style="color:#1a3a5c">${tmx}</b> &nbsp;|&nbsp; P-UP: <b style="color:#e84c1e">${tpp}</b></span>
-        </div>
-        <div style="height:70px"><canvas id="${tcid}"></canvas></div>`;
-      wrap.appendChild(tmDiv);
-      makeDailyChart(tcid, dates, td, FI, isRS);
-    });
-
-    // ── พนักงานลาออก ── (ถ้ามี)
-    const resBrs=Object.keys(resigned).sort();
-    if(resBrs.length){
-      const resWrap=document.createElement('div');
-      resWrap.style.cssText='border-top:2px solid #fca5a5;padding:8px 14px;background:#fff7f7;';
-      let resHtml=`<div style="font-size:12px;font-weight:800;color:#991b1b;margin-bottom:6px">👋 พนักงานลาออก</div>`;
-      resBrs.forEach(resBr=>{
-        const rd=resigned[resBr];
-        const rmx=rd.filter(r=>r[FI.mg]==='MU-X').length;
-        const rpp=rd.filter(r=>r[FI.mg]==='P-UP').length;
-        const rcid=pfx+'_'+br+'_res_'+resBr;
-        resHtml+=`
-          <div style="margin-bottom:8px">
-            <div style="font-size:11px;color:#7f1d1d;font-weight:700;margin-bottom:3px">
-              สาขา ${resBr} — รวม ${rmx+rpp} &nbsp;|&nbsp; MU-X: ${rmx} &nbsp;|&nbsp; P-UP: ${rpp}
-            </div>
-            <div style="height:60px"><canvas id="${rcid}"></canvas></div>
-          </div>`;
-        // render chart after DOM insert
-        setTimeout(()=>makeDailyChart(rcid, dates, rd, FI, isRS),50);
-      });
-      resWrap.innerHTML=resHtml;
-      wrap.appendChild(resWrap);
-    }
   });
-
-  // ── พนักงานลาออก ข้ามสาขา (SC ในสาขาที่ไม่มีใน data) ──
-  // จัดการใน section แยกท้าย grid
-  const allResigned={};
-  // หา resigned ที่ branch ไม่อยู่ใน brs
-  // (กรณีนี้น้อย แต่รองรับไว้)
 }
 
 // ── SC TABLE (Tab 2/4) ───────────────────────────────────────────────────────
 function buildSCTable(secId,pfx,data,FI,isRS,mode){
-  // mode: 'all'|'pup'|'mux'  (only used for RS tab4)
   const m=mode||'all';
-  const showMx=(m==='all'||m==='mux');
-  const showPp=(m==='all'||m==='pup');
-  const sec=$(secId);sec.innerHTML='';
-  const brs=[...new Set(data.map(r=>r[FI.br]).filter(Boolean))].sort();
-  brs.forEach(br=>{
-    const bd=data.filter(r=>r[FI.br]===br);
-    const scs=[...new Set(bd.map(r=>r[FI.sc]).filter(Boolean))].sort();
-    const dates=[...new Set(bd.map(r=>r[FI.d]).filter(Boolean))].sort();
-    if(!scs.length)return;
-    const blk=document.createElement('div');blk.className='bblk';
-    // Build header based on mode
-    let thCols='';
+  const sec=$(secId); sec.innerHTML='';
+  const dates=[...new Set(data.map(r=>r[FI.d]).filter(Boolean))].sort();
+  if(!dates.length) return;
+
+  // helper: สร้าง th headers
+  function makeThCols(){
+    let th='';
     dates.forEach(d=>{
-      const dt=new Date(d);
-      const label=`${dt.getDate()}/${dt.getMonth()+1}`;
+      const dt=new Date(d), lbl=`${dt.getDate()}/${dt.getMonth()+1}`;
+      if(m==='all')      th+=`<th class="thd"><div class="thm mx">${lbl}</div><div class="thm mx">MX</div><div class="thm pp">PP</div></th>`;
+      else if(m==='mux') th+=`<th class="thd"><div class="thm mx">${lbl}</div><div class="thm mx">MX</div></th>`;
+      else               th+=`<th class="thd"><div class="thm pp">${lbl}</div><div class="thm pp">PP</div></th>`;
+    });
+    return th;
+  }
+  function makeGtCols(){
+    if(m==='all')  return '<th class="gmx">MX</th><th class="gpp">PP</th>';
+    if(m==='mux')  return '<th class="gmx">MX รวม</th>';
+    return '<th class="gpp">PP รวม</th>';
+  }
+
+  // helper: render แถว SC
+  function renderSCRow(scName, scCode, scRows, allDates, isResigned){
+    const scMx={}, scPp={};
+    allDates.forEach(d=>{scMx[d]=0;scPp[d]=0;});
+    scRows.forEach(r=>{
+      const d=r[FI.d];if(!d)return;
+      if(r[FI.mg]==='MU-X') scMx[d]=(scMx[d]||0)+1;
+      else if(r[FI.mg]==='P-UP') scPp[d]=(scPp[d]||0)+1;
+    });
+    const tmx=allDates.reduce((s,d)=>s+(scMx[d]||0),0);
+    const tpp=allDates.reduce((s,d)=>s+(scPp[d]||0),0);
+    if(m==='mux'&&!tmx) return '';
+    if(m==='pup'&&!tpp) return '';
+    if(m==='all'&&!tmx&&!tpp) return '';
+    let cells='';
+    allDates.forEach(d=>{
+      const mx=scMx[d]||0, pp=scPp[d]||0;
       if(m==='all'){
-        thCols+=`<th class="thd"><div class="thm mx">${label}</div><div class="thm mx">MX</div><div class="thm pp">PP</div></th>`;
+        if(!mx&&!pp) cells+='<td class="cz">—</td>';
+        else cells+=`<td>${mx?`<span class="cmx">${mx}</span>`:''} ${pp?`<span class="cpp">${pp}</span>`:''}</td>`;
       } else if(m==='mux'){
-        thCols+=`<th class="thd"><div class="thm mx">${label}</div><div class="thm mx">MX</div></th>`;
+        cells+=mx?`<td><span class="cmx">${mx}</span></td>`:'<td class="cz">—</td>';
       } else {
-        thCols+=`<th class="thd"><div class="thm pp">${label}</div><div class="thm pp">PP</div></th>`;
+        cells+=pp?`<td><span class="cpp">${pp}</span></td>`:'<td class="cz">—</td>';
       }
     });
-    // Grand total cols
-    let gtCols='';
-    if(m==='all') gtCols='<th class="gmx">MX</th><th class="gpp">PP</th>';
-    else if(m==='mux') gtCols='<th class="gmx">MX รวม</th>';
-    else gtCols='<th class="gpp">PP รวม</th>';
+    let tot='';
+    if(m==='all')  tot=`<td class="gmx">${tmx||'—'}</td><td class="gpp">${tpp||'—'}</td>`;
+    if(m==='mux')  tot=`<td class="gmx">${tmx||'—'}</td>`;
+    if(m==='pup')  tot=`<td class="gpp">${tpp||'—'}</td>`;
+    const nameStyle=isResigned?'color:#991b1b;':'';
+    return `<tr><td class="sn" style="${nameStyle}">${scName}</td><td class="sc-code" style="font-size:10px;color:#94a3b8;text-align:center">${scCode}</td>${cells}${tot}</tr>`;
+  }
 
-    const thead=`<thead><tr><th class="sn ${isRS?'rs':''}">${isRS?'💰 SC':'👤 SC'}</th>${thCols}${gtCols}</tr></thead>`;
-    const scMx={},scPp={};
-    scs.forEach(sc=>{scMx[sc]={};scPp[sc]={};dates.forEach(d=>{scMx[sc][d]=0;scPp[sc][d]=0;});});
-    bd.forEach(r=>{const d=r[FI.d],sc=r[FI.sc];if(!d||!sc||!scMx[sc])return;if(r[FI.mg]==='MU-X')scMx[sc][d]++;else if(r[FI.mg]==='P-UP')scPp[sc][d]++;});
-    let rows='';
-    scs.forEach(sc=>{
-      const tmx=dates.reduce((s,d)=>s+scMx[sc][d],0);
-      const tpp=dates.reduce((s,d)=>s+scPp[sc][d],0);
-      if(m==='mux'&&!tmx)return;
-      if(m==='pup'&&!tpp)return;
-      if(m==='all'&&!tmx&&!tpp)return;
-      let cells='';
-      dates.forEach(d=>{
-        const mx=scMx[sc][d],pp=scPp[sc][d];
-        if(m==='all'){
-          if(!mx&&!pp){cells+='<td class="cz">—</td>';}
-          else{cells+=`<td>${mx?`<span class="cmx">${mx}</span>`:''} ${pp?`<span class="cpp">${pp}</span>`:''}</td>`;}
-        } else if(m==='mux'){
-          cells+=mx?`<td><span class="cmx">${mx}</span></td>`:'<td class="cz">—</td>';
-        } else {
-          cells+=pp?`<td><span class="cpp">${pp}</span></td>`:'<td class="cz">—</td>';
-        }
-      });
-      let totCells='';
-      if(m==='all') totCells=`<td class="gmx">${tmx||'—'}</td><td class="gpp">${tpp||'—'}</td>`;
-      else if(m==='mux') totCells=`<td class="gmx">${tmx||'—'}</td>`;
-      else totCells=`<td class="gpp">${tpp||'—'}</td>`;
-      rows+=`<tr><td class="sn">${sc}</td>${cells}${totCells}</tr>`;
+  // helper: render แถวรวม (team หรือ branch)
+  function renderSumRow(label, rowsArr, allDates, style){
+    const sumMx={}, sumPp={};
+    allDates.forEach(d=>{sumMx[d]=0;sumPp[d]=0;});
+    rowsArr.forEach(r=>{
+      const d=r[FI.d];if(!d)return;
+      if(r[FI.mg]==='MU-X') sumMx[d]=(sumMx[d]||0)+1;
+      else if(r[FI.mg]==='P-UP') sumPp[d]=(sumPp[d]||0)+1;
     });
-    // Total row
-    const totMx=scs.reduce((s,sc)=>s+dates.reduce((ss,d)=>ss+scMx[sc][d],0),0);
-    const totPp=scs.reduce((s,sc)=>s+dates.reduce((ss,d)=>ss+scPp[sc][d],0),0);
-    let totCells='';
-    dates.forEach(d=>{
-      const mx=scs.reduce((s,sc)=>s+scMx[sc][d],0);
-      const pp=scs.reduce((s,sc)=>s+scPp[sc][d],0);
-      if(m==='all'){totCells+=`<td>${mx?`<span class="cmx">${mx}</span>`:''} ${pp?`<span class="cpp">${pp}</span>`:''}</td>`;}
-      else if(m==='mux'){totCells+=mx?`<td><span class="cmx">${mx}</span></td>`:'<td class="cz">—</td>';}
-      else{totCells+=pp?`<td><span class="cpp">${pp}</span></td>`:'<td class="cz">—</td>';}
+    const tmx=allDates.reduce((s,d)=>s+(sumMx[d]||0),0);
+    const tpp=allDates.reduce((s,d)=>s+(sumPp[d]||0),0);
+    let cells='';
+    allDates.forEach(d=>{
+      const mx=sumMx[d]||0, pp=sumPp[d]||0;
+      if(m==='all'){
+        if(!mx&&!pp) cells+='<td class="cz">—</td>';
+        else cells+=`<td>${mx?`<span class="cmx">${mx}</span>`:''} ${pp?`<span class="cpp">${pp}</span>`:''}</td>`;
+      } else if(m==='mux'){
+        cells+=mx?`<td><span class="cmx">${mx}</span></td>`:'<td class="cz">—</td>';
+      } else {
+        cells+=pp?`<td><span class="cpp">${pp}</span></td>`:'<td class="cz">—</td>';
+      }
     });
-    let totGt='';
-    if(m==='all') totGt=`<td class="gmx">${totMx}</td><td class="gpp">${totPp}</td>`;
-    else if(m==='mux') totGt=`<td class="gmx">${totMx}</td>`;
-    else totGt=`<td class="gpp">${totPp}</td>`;
-    const totRow=`<tr class="trow"><td class="sn">รวม</td>${totCells}${totGt}</tr>`;
-    blk.innerHTML=`<div class="bblkt ${isRS?'rs':''}">สาขา ${br}</div><div class="twrap"><table class="st">${thead}<tbody>${rows}${totRow}</tbody></table></div>`;
-    sec.appendChild(blk);
+    let tot='';
+    if(m==='all')  tot=`<td class="gmx">${tmx||'—'}</td><td class="gpp">${tpp||'—'}</td>`;
+    if(m==='mux')  tot=`<td class="gmx">${tmx}</td>`;
+    if(m==='pup')  tot=`<td class="gpp">${tpp}</td>`;
+    return `<tr style="${style}"><td class="sn" colspan="2" style="${style}">${label}</td>${cells}${tot}</tr>`;
+  }
+
+  // จัดกลุ่ม data ทั้งหมด → branch → team → scName → rows[]
+  // สาขา FT+HO รวมกัน
+  const normBr = br => (br==='FT'||br==='HO') ? 'FT&HO' : br;
+  const brTeam = {}; // branch → team → scName → rows[]
+  const resigned = {}; // branch → scName → {code, rows[]}
+
+  data.forEach(r=>{
+    const scName = r[FI.sc]||'';
+    const scCode = (FI.cd!==undefined&&FI.cd>=0) ? (r[FI.cd]||'') : '';
+    const rawBr  = r[FI.br]||'?';
+    const br     = normBr(rawBr);
+    const info   = getSCInfo(scName, scCode, rawBr);
+    const team   = info.team||'ลาออก';
+
+    if(team==='ลาออก'){
+      if(!resigned[br]) resigned[br]={};
+      if(!resigned[br][scName]) resigned[br][scName]={code:info.code||scCode,rows:[]};
+      resigned[br][scName].rows.push(r);
+    } else {
+      if(!brTeam[br]) brTeam[br]={};
+      if(!brTeam[br][team]) brTeam[br][team]={};
+      if(!brTeam[br][team][scName]) brTeam[br][team][scName]={code:info.code||scCode,rows:[]};
+      brTeam[br][team][scName].rows.push(r);
+    }
   });
+
+  // ลำดับสาขา: SR → BS → BN → KS → FT&HO → (resigned ท้ายสุด)
+  const BR_DISPLAY = ['SR','BS','BN','KS','FT&HO'];
+  const allBrs = [...new Set([...Object.keys(brTeam),...Object.keys(resigned)])];
+  const orderedBrs = [
+    ...BR_DISPLAY.filter(b=>allBrs.includes(b)),
+    ...allBrs.filter(b=>!BR_DISPLAY.includes(b)).sort()
+  ];
+
+  const thCols=makeThCols(), gtCols=makeGtCols();
+  // thead มี col SC + Code + dates + total
+  const scColspan=2; // SC name + Code
+  const thead=`<thead>
+    <tr><th class="sn ${isRS?'rs':''}" colspan="${scColspan}">${isRS?'💰 SC Team / ชื่อ':'👤 SC Team / ชื่อ'}</th>${thCols}${gtCols}</tr>
+  </thead>`;
+
+  orderedBrs.forEach(br=>{
+    const brRows = data.filter(r=>normBr(r[FI.br]||'?')===br);
+    const mxT=brRows.filter(r=>r[FI.mg]==='MU-X').length;
+    const ppT=brRows.filter(r=>r[FI.mg]==='P-UP').length;
+    const brLabel = br==='FT&HO' ? '🏢 FT & HO' : `🏢 สาขา ${br} — ${{'SR':'ศรีนครินทร์','BS':'บางเสาธง','BN':'บางนา','KS':'เกษตร'}[br]||br}`;
+
+    let tbody='';
+    // Branch header row
+    tbody+=`<tr class="br-hdr-main" style="background:#1a3a5c;color:#fff">
+      <td colspan="${scColspan}" style="font-weight:800;font-size:13px;padding:8px 14px">${brLabel}</td>
+      ${dates.map(()=>'<td></td>').join('')}
+      ${m==='all'?`<td class="bk-sum" style="background:#1e40af;color:#fff;text-align:center;font-weight:800">${mxT}</td><td class="rs-sum" style="background:#166534;color:#fff;text-align:center;font-weight:800">${ppT}</td>`:
+        m==='mux'?`<td class="bk-sum" style="background:#1e40af;color:#fff;text-align:center;font-weight:800">${mxT}</td>`:
+        `<td class="rs-sum" style="background:#166534;color:#fff;text-align:center;font-weight:800">${ppT}</td>`}
+    </tr>`;
+
+    // Teams
+    if(brTeam[br]){
+      const teams = brTeam[br];
+      const orderedTeams=[
+        ...TEAM_ORDER.filter(t=>teams[t]),
+        ...Object.keys(teams).filter(t=>!TEAM_ORDER.includes(t)).sort()
+      ];
+      orderedTeams.forEach(team=>{
+        const scMap = teams[team];
+        const teamRows = Object.values(scMap).flatMap(v=>v.rows);
+        // Team header
+        tbody+=renderSumRow(
+          `<span style="background:#0d9488;color:#fff;border-radius:4px;padding:1px 9px;font-size:11px;font-weight:800;margin-right:6px">ทีม ${team}</span>`,
+          teamRows, dates,
+          'background:#e8f5f0;font-weight:800;font-size:12px'
+        );
+        // SC rows sorted by name
+        Object.entries(scMap).sort((a,b)=>a[0].localeCompare(b[0],'th')).forEach(([scName,v])=>{
+          tbody+=renderSCRow(scName, v.code, v.rows, dates, false);
+        });
+      });
+    }
+
+    sec.appendChild((() => {
+      const blk=document.createElement('div'); blk.className='bblk';
+      blk.innerHTML=`<div class="twrap"><table class="st">${thead}<tbody>${tbody}</tbody></table></div>`;
+      return blk;
+    })());
+  });
+
+  // ── พนักงานลาออก (ท้ายสุด) ──
+  const resAllBrs = Object.keys(resigned).sort();
+  if(!resAllBrs.length) return;
+
+  const resBlk=document.createElement('div'); resBlk.className='bblk';
+  let resTbody='';
+  // Section header
+  resTbody+=`<tr style="background:#991b1b;color:#fff">
+    <td colspan="${scColspan+dates.length+(m==='all'?2:1)}" style="font-weight:800;font-size:13px;padding:8px 14px">
+      👋 พนักงานลาออก
+    </td>
+  </tr>`;
+
+  resAllBrs.forEach(br=>{
+    const scMap=resigned[br];
+    const brRows=Object.values(scMap).flatMap(v=>v.rows);
+    const mxT=brRows.filter(r=>r[FI.mg]==='MU-X').length;
+    const ppT=brRows.filter(r=>r[FI.mg]==='P-UP').length;
+    // Branch sub-header
+    resTbody+=`<tr style="background:#fee2e2">
+      <td colspan="${scColspan}" style="font-weight:700;font-size:12px;padding:6px 14px;color:#7f1d1d">
+        สาขา ${br}
+      </td>
+      ${dates.map(()=>'<td></td>').join('')}
+      ${m==='all'?`<td class="gmx" style="color:#7f1d1d">${mxT||'—'}</td><td class="gpp" style="color:#7f1d1d">${ppT||'—'}</td>`:
+        m==='mux'?`<td class="gmx" style="color:#7f1d1d">${mxT||'—'}</td>`:
+        `<td class="gpp" style="color:#7f1d1d">${ppT||'—'}</td>`}
+    </tr>`;
+    Object.entries(scMap).sort((a,b)=>a[0].localeCompare(b[0],'th')).forEach(([scName,v])=>{
+      resTbody+=renderSCRow(scName, v.code, v.rows, dates, true);
+    });
+  });
+
+  resBlk.innerHTML=`<div class="twrap"><table class="st">${thead}<tbody>${resTbody}</tbody></table></div>`;
+  sec.appendChild(resBlk);
 }
+
 
 // ── TAB 5: Top Performer ────────────────────────────────────────────────────
 function rankCls(i){return i===0?'gold':i===1?'silver':i===2?'bronze':'other';}
@@ -1351,8 +1381,6 @@ function handleImport(ev,type){
 
 
 // ── TAB 6: SC Summary (BK vs RS by Team) ─────────────────────────────────────
-// TEAM_MAP เดิม (hardcode) → ถูกแทนที่ด้วย SC_MAP จาก Sheet SC แล้ว
-// คงไว้เป็น fallback กรณี SC sheet ยังไม่มี
 const TEAM_MAP={
   "A2376":"SR-A","A7443":"SR-A","A3150":"SR-A","A2581":"SR-A",
   "A3473":"SR-B","A6904":"SR-B","A0072":"SR-B",
@@ -1436,7 +1464,7 @@ function renderSC6(){
 
   // Group by branch then team
   // Branch order
-  const BR_ORDER=BR_ORDER_DEFAULT;
+  const BR_ORDER=['SR','BS','BN','KS','FT','HO'];
   // For each SC, determine branch from BK data first, then RS
   const scBranch={};
   Object.values(scMap).forEach(sc=>{
@@ -1448,8 +1476,7 @@ function renderSC6(){
   const brTeam={};
   Object.values(scMap).forEach(sc=>{
     const br=scBranch[sc.code]||'?';
-    const scInfo=getSCInfo(sc.name, sc.code, br);
-    const team=scInfo.team==='ลาออก'?('ลาออก-'+br):scInfo.team||(br+'-?');
+    const team=TEAM_MAP[sc.code]||(br+'-?');
     if(!brTeam[br])brTeam[br]={};
     if(!brTeam[br][team])brTeam[br][team]=[];
     brTeam[br][team].push(sc);
@@ -1475,13 +1502,7 @@ function renderSC6(){
   BR_ORDER.forEach(br=>{
     if(!brTeam[br])return;
     const brName=BR_NAME[br]||br;
-    // เรียงทีมตาม TEAM_ORDER → ลาออก ท้ายสุด
-    const allTeams=Object.keys(brTeam[br]);
-    const teams=[
-      ...TEAM_ORDER.filter(t=>allTeams.some(k=>k===t||k.endsWith('-'+t)||k===br+'-'+t)),
-      ...allTeams.filter(t=>!TEAM_ORDER.some(o=>t===o||t.endsWith('-'+o)||t===br+'-'+o)&&!t.startsWith('ลาออก')).sort(),
-      ...allTeams.filter(t=>t.startsWith('ลาออก')).sort(),
-    ];
+    const teams=Object.keys(brTeam[br]).sort();
 
     // branch total
     let brTotBK=0,brTotRS=0;
@@ -1934,7 +1955,7 @@ async function loadFromGAS() {
     initBK(BK); initRS(RS); initTP(); initSC6(); initRK7(); initT8();
     updateDataStatus();
     render();
-    toast('✅ โหลดข้อมูลสำเร็จ — BK ' + BK.length + ' รายการ, RS ' + RS.length + ' รายการ' + (SC_DATA.length?' | SC '+SC_DATA.length+' คน':''));
+    toast('✅ โหลดข้อมูลสำเร็จ — BK ' + BK.length + ' รายการ, RS ' + RS.length + ' รายการ');
   } catch(e) {
     showLoading(false);
     showToastError('❌ โหลดข้อมูลล้มเหลว: ' + e.message);
