@@ -668,13 +668,13 @@ const PAL=['#1a3a5c','#e84c1e','#1db87a','#f5a623','#7b5ea7','#3a86ff','#f72585'
 
 // ── GAS CONFIG ────────────────────────────────────────────────────────────────
 // วาง GAS Web App URL ที่นี่ หรือจะใส่ผ่าน popup เมื่อเปิดหน้าแรก
-let GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/macros/s/AKfycbxI76rbWm7SWxgRLBHGoa6y33MBgYDO3i9qH9cM-Y2yroVzkFuRxXo63iU8Q9SC3OnKkw/exec';
+var GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/macros/s/AKfycbxI76rbWm7SWxgRLBHGoa6y33MBgYDO3i9qH9cM-Y2yroVzkFuRxXo63iU8Q9SC3OnKkw/exec';
 
 // ── EMPTY INITIAL ARRAYS ─────────────────────────────────────────────────────
-let BK=[], RS=[];
-let SC_DATA=[];
-let SC_MAP={};
-let SC_NAME_MAP={};
+var BK=[], RS=[];
+var SC_DATA=[];
+var SC_MAP={};
+var SC_NAME_MAP={};
 const TEAM_ORDER=['S','A','B','C','D'];
 const BR_ORDER_DEFAULT=['SR','BS','BN','KS','FT','HO'];
 
@@ -699,8 +699,8 @@ function getSCInfo(scName,scCode,fallbackBranch){
   // ถ้าหาไม่เจอ → ลาออก (branch จาก data, team='ลาออก')
   return{name:scName||scCode||'ไม่ระบุ',code:scCode||'',branch:fallbackBranch||'?',team:'ลาออก'};
 }
-let bkSt='', curTab=1, rs4Mode='all', bk2Mode='all';
-let CH={};
+var bkSt='', curTab=1, rs4Mode='all', bk2Mode='all';
+var CH={};
 Chart.register(ChartDataLabels);
 Chart.defaults.plugins.datalabels = { display: false };
 
@@ -1056,7 +1056,7 @@ function updateRSCmpOptions(){
 }
 
 // state
-let bkCmpActive=false, rsCmpActive=false;
+var bkCmpActive=false, rsCmpActive=false;
 
 function applyBKCmp(){
   const type=$('bkCmpType').value;
