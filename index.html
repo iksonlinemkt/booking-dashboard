@@ -682,15 +682,21 @@ function buildSCIndex(){
   SC_MAP={};SC_NAME_MAP={};
   SC_DATA.forEach(r=>{
     const name=r[0]||'',code=r[1]||'',branch=r[2]||'',team=r[3]||'';
+    // code อาจว่าง (Sheet SC ไม่มี code column)
     if(code) SC_MAP[code]={name,code,branch,team};
-    const key=name.replace(/\s+/g,' ').trim().toLowerCase();
+    // ใช้ชื่อเป็น key หลัก (normalized)
+    const key=name.replace(/ /g,' ').replace(/\s+/g,' ').trim().toLowerCase();
     if(key) SC_NAME_MAP[key]={name,code,branch,team};
   });
+  console.log('[SC] loaded:',SC_DATA.length,'entries, name map:',Object.keys(SC_NAME_MAP).length);
 }
 function getSCInfo(scName,scCode,fallbackBranch){
+  // lookup by code ก่อน
   if(scCode&&SC_MAP[scCode]) return SC_MAP[scCode];
-  const key=(scName||'').replace(/\s+/g,' ').trim().toLowerCase();
+  // normalize ชื่อ: ลบ  , ลด space ซ้ำ
+  const key=(scName||'').replace(/ /g,' ').replace(/\s+/g,' ').trim().toLowerCase();
   if(key&&SC_NAME_MAP[key]) return SC_NAME_MAP[key];
+  // ถ้าหาไม่เจอ → ลาออก (branch จาก data, team='ลาออก')
   return{name:scName||scCode||'ไม่ระบุ',code:scCode||'',branch:fallbackBranch||'?',team:'ลาออก'};
 }
 let bkSt='', curTab=1, rs4Mode='all', bk2Mode='all';
@@ -1778,8 +1784,11 @@ function renderSC6(){
   // BK
   bk.forEach(r=>{
     const nm=r[BF.sc]||'', cd=r[BF.cd]||'';
-    const rawBr=r[BF.br]||'?', br=normBr(rawBr);
+    const rawBr=r[BF.br]||'';
     const info=getSCInfo(nm,cd,rawBr);
+    // branch: ใช้จาก SC sheet ก่อน fallback ไป data row แล้วค่อย '?'
+    const infoBr=info.branch||rawBr||'?';
+    const br=normBr(infoBr);
     const team=info.team||'ลาออก';
     const key=cd||nm;
     if(team==='ลาออก'){
@@ -1803,9 +1812,11 @@ function renderSC6(){
     })
   ));
   rs.forEach(r=>{
-    const nm=String(r[RF.sc]||'').replace(/\xa0/g,' ').trim();
-    const rawBr=r[RF.br]||'?', br=normBr(rawBr);
+    const nm=String(r[RF.sc]||'').replace(/ /g,' ').trim();
+    const rawBr=r[RF.br]||'';
     const info=getSCInfo(nm,'',rawBr);
+    const infoBr=info.branch||rawBr||'?';
+    const br=normBr(infoBr);
     const team=info.team||'ลาออก';
     const key=info.code||nm;
     if(team==='ลาออก'){
