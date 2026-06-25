@@ -1909,18 +1909,45 @@ function renderSC6(){
     });
   });
 
-  // พนักงานลาออก
-  const resAllBrs=Object.keys(resigned).sort();
+  // ── พนักงานลาออก (ท้ายสุด) แยกตามสาขา ──
+  const resAllBrs=Object.keys(resigned).sort((a,b)=>{
+    const ord=BR_DISPLAY;
+    const ai=ord.indexOf(a),bi=ord.indexOf(b);
+    if(ai>=0&&bi>=0)return ai-bi;
+    if(ai>=0)return -1;if(bi>=0)return 1;
+    return a.localeCompare(b);
+  });
   if(resAllBrs.length){
-    html+=`<tr><td colspan="${totalCols}" style="background:#991b1b;color:#fff;font-weight:800;font-size:13px;padding:8px 14px">👋 พนักงานลาออก</td></tr>`;
+    html+=`<tr><td colspan="${totalCols}" style="background:#991b1b;color:#fff;font-weight:800;font-size:13px;padding:8px 14px">
+      👋 พนักงานลาออก
+      <span style="float:right;font-size:12px;font-weight:400;opacity:.85">SC ที่ไม่พบในระบบ</span>
+    </td></tr>`;
     resAllBrs.forEach(br=>{
       const scMap=resigned[br];
       const brBK=Object.values(scMap).flatMap(v=>v.bk);
       const brRS=Object.values(scMap).flatMap(v=>v.rs);
-      html+=sumRow(`สาขา ${br}`,brBK,brRS,'background:#fee2e2','background:#fee2e2;font-weight:700;color:#7f1d1d;padding:6px 14px');
-      Object.entries(scMap).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','th')).forEach(([,v])=>{
-        html+=scRow(v,22,'color:#991b1b');
+      const brName={'SR':'ศรีนครินทร์','BS':'บางเสาธง','BN':'บางนา','KS':'เกษตร','FT&HO':'Fleet & HO'}[br]||br;
+      // sub-header สาขา
+      html+=`<tr style="background:#fef2f2">
+        <td colspan="2" style="font-weight:700;font-size:12px;padding:6px 14px;color:#7f1d1d">
+          สาขา ${br} — ${brName}
+          <span style="font-size:11px;font-weight:400;margin-left:8px">BK: ${brBK.length} | RS: ${brRS.length}</span>
+        </td>`;
+      mos.forEach(m=>{
+        const mbk=brBK.filter(r=>r[BF.d]?.slice(0,7)===m).length;
+        const mrs=brRS.filter(r=>r[RF.d]?.slice(0,7)===m).length;
+        html+=`<td class="bk-sum" style="background:#fee2e2;color:#991b1b">${mbk||0}</td><td class="rs-sum" style="background:#fee2e2;color:#991b1b">${mrs||0}</td>`;
       });
+      html+=`<td class="bk-sum" style="background:#fca5a5;color:#7f1d1d">${brBK.length}</td>
+             <td class="rs-sum" style="background:#fca5a5;color:#7f1d1d">${brRS.length}</td>
+             <td style="background:#fca5a5;color:#7f1d1d;text-align:center;font-weight:800">${(brRS.length/moCount).toFixed(1)}</td>
+      </tr>`;
+      // SC rows
+      Object.entries(scMap)
+        .sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','th'))
+        .forEach(([,v])=>{
+          html+=scRow(v,22,'color:#991b1b');
+        });
     });
   }
 
