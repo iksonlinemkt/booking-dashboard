@@ -1071,21 +1071,44 @@ function resetRSCmp(){
   kpiRS(d); renderRS3(d);
 }
 
-// กราฟ bar เปรียบเทียบช่วงเวลา — grouped bar
-function cmpBarChart(id, labels, datasets, yLabel){
+// กราฟ 100% stacked เปรียบเทียบช่วงเวลา + datalabels % ค้าง
+function cmpBarChart(id, labels, datasets){
   dC(id);
   if(CH[id]){CH[id].destroy();delete CH[id];}
   const el=$(id); if(!el) return;
+  // คำนวณ % จาก raw count → ต้องคำนวณใหม่เป็น %
+  // datasets.data = raw counts → แปลงเป็น % ตาม column
+  const colTots = labels.map((_,ci)=>datasets.reduce((s,ds)=>s+(ds.data[ci]||0),0));
+  const pctDatasets = datasets.map(ds=>({
+    ...ds,
+    stack:'s',
+    rawData: ds.data,
+    data: ds.data.map((v,ci)=>colTots[ci]>0?+(v/colTots[ci]*100).toFixed(1):0)
+  }));
   CH[id]=new Chart(el.getContext('2d'),{
     type:'bar',
-    data:{labels,datasets},
+    data:{labels, datasets:pctDatasets},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{
-        legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
-        tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} ${yLabel||'คัน'}`}},
-        datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,color:'#fff',font:{size:11,weight:'bold'},formatter:v=>v>0?v:'',anchor:'end',align:'end',color:'#374151'}
+        legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:5}},
+        tooltip:{callbacks:{label:c=>{
+          const raw=pctDatasets[c.datasetIndex].rawData[c.dataIndex]||0;
+          return ` ${c.dataset.label}: ${c.parsed.y}% (${raw} คัน)`;
+        }}},
+        datalabels:{
+          display:ctx=>ctx.dataset.data[ctx.dataIndex]>=5,
+          color:'#fff',
+          font:{size:10,weight:'bold'},
+          formatter:v=>v>=5?v.toFixed(0)+'%':'',
+          anchor:'center',align:'center',
+          textShadow:'0 1px 2px rgba(0,0,0,.4)'
+        }
       },
-      scales:{x:{ticks:{font:{size:12}}},y:{beginAtZero:true,ticks:{font:{size:11}},grid:{color:'#eee'}}}}
+      scales:{
+        x:{stacked:true,ticks:{font:{size:11}}},
+        y:{stacked:true,min:0,max:100,ticks:{callback:v=>v+'%',font:{size:11}},grid:{color:'#eee'}}
+      }
+    }
   });
 }
 
@@ -1138,11 +1161,12 @@ function renderBK1Cmp(data, type, n){
     backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
   })));
 
-  // อาชีพ
+  // อาชีพ — กรอง SC Code ออก
   dC('cOcc');
-  const occTypes=[...new Set(data.map(r=>r[BF.oc]||'').filter(Boolean))].sort();
+  const isScCode=v=>/^[A-Za-z]\d{3,}$/.test(v)||/^\d{7,}$/.test(v)||/^HO\d+$/.test(v);
+  const occTypes=[...new Set(data.map(r=>r[BF.oc]||'').filter(v=>v&&!isScCode(v)))].sort();
   cmpBarChart('cOcc',labels,occTypes.map((t,i)=>({
-    label:t,data:periods.map(p=>p.filter(r=>r[BF.oc]===t).length),
+    label:t,data:periods.map(p=>p.filter(r=>r[BF.oc]===t&&!isScCode(r[BF.oc]||'')).length),
     backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
   })));
 }
@@ -1231,7 +1255,13 @@ function renderBK1(d){
     });
   }
   stk100('cSrc',d,BF.cs,null,BF);
-  stk100('cOcc',d,BF.oc,null,BF);
+  // กรอง SC Code ออกจากอาชีพ (SC Code มักขึ้นต้นด้วย A+ตัวเลข หรือเป็นตัวเลขล้วน)
+  const isScCode=v=>/^[A-Za-z]\d{3,}$/.test(v)||/^\d{7,}$/.test(v)||/^HO\d+$/.test(v);
+  const occData=d.map(r=>{
+    const oc=r[BF.oc]||'';
+    return [...r.slice(0,BF.oc), isScCode(oc)?'':oc, ...r.slice(BF.oc+1)];
+  });
+  stk100('cOcc',occData,BF.oc,null,BF);
 }
 
 // ── TAB 2: BK Consistency ───────────────────────────────────────────────────
