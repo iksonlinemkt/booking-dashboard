@@ -1774,114 +1774,111 @@ function renderSC6(){
   const{bk,rs}=getSC6Data();
   const mos=[...new Set([...bk.map(r=>r[BF.d]?.slice(0,7)),...rs.map(r=>r[RF.d]?.slice(0,7))].filter(Boolean))].sort();
   const moCount=mos.length||1;
-
-  // จัดกลุ่ม SC โดยใช้ getSCInfo
-  // br → team → scCode → {name, code, bk:[], rs:[]}
   const normBr=br=>(br==='FT'||br==='HO')?'FT&HO':br;
-  const brTeam={};
-  const resigned={};
+  const normName=n=>(n||'').replace(/\xa0/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+
+  // brTeam[br][team][nameKey] = {name, code, bk:[], rs:[]}
+  const brTeam={}, resigned={};
+
+  function getOrCreate(store, br, team, nameKey, name, code){
+    if(!store[br]) store[br]={};
+    if(!store[br][team]) store[br][team]={};
+    if(!store[br][team][nameKey]) store[br][team][nameKey]={name, code, bk:[], rs:[]};
+    return store[br][team][nameKey];
+  }
+  function getOrCreateRes(store, br, nameKey, name, code){
+    if(!store[br]) store[br]={};
+    if(!store[br][nameKey]) store[br][nameKey]={name, code, bk:[], rs:[]};
+    return store[br][nameKey];
+  }
 
   // BK
   bk.forEach(r=>{
     const nm=r[BF.sc]||'', cd=r[BF.cd]||'';
-    const rawBr=r[BF.br]||'';
-    const info=getSCInfo(nm,cd,rawBr);
-    // branch: ใช้จาก SC sheet ก่อน fallback ไป data row แล้วค่อย '?'
-    const infoBr=info.branch||rawBr||'?';
-    const br=normBr(infoBr);
+    const info=getSCInfo(nm,cd,r[BF.br]||'');
+    const br=normBr(info.branch||r[BF.br]||'?');
     const team=info.team||'ลาออก';
-    const key=cd||nm;
-    if(team==='ลาออก'){
-      if(!resigned[br])resigned[br]={};
-      if(!resigned[br][key])resigned[br][key]={name:info.name||nm,code:cd,bk:[],rs:[]};
-      resigned[br][key].bk.push(r);
-    } else {
-      if(!brTeam[br])brTeam[br]={};
-      if(!brTeam[br][team])brTeam[br][team]={};
-      if(!brTeam[br][team][key])brTeam[br][team][key]={name:info.name||nm,code:cd,bk:[],rs:[]};
-      brTeam[br][team][key].bk.push(r);
-    }
+    const nameKey=normName(info.name||nm)||cd||'unknown';
+    if(team==='ลาออก') getOrCreateRes(resigned,br,nameKey,info.name||nm,info.code||cd).bk.push(r);
+    else getOrCreate(brTeam,br,team,nameKey,info.name||nm,info.code||cd).bk.push(r);
   });
 
-  // RS — match by name
-  const nameToKey={};
-  Object.values(brTeam).forEach(tm=>Object.values(tm).forEach(scMap=>
-    Object.entries(scMap).forEach(([key,v])=>{
-      const k=(v.name||'').replace(/\s+/g,' ').trim().toLowerCase();
-      if(k)nameToKey[k]=key;
-    })
-  ));
+  // RS — ใช้ normName เป็น key เหมือนกัน
   rs.forEach(r=>{
-    const nm=String(r[RF.sc]||'').replace(/ /g,' ').trim();
-    const rawBr=r[RF.br]||'';
-    const info=getSCInfo(nm,'',rawBr);
-    const infoBr=info.branch||rawBr||'?';
-    const br=normBr(infoBr);
+    const nm=String(r[RF.sc]||'').replace(/\xa0/g,' ').trim();
+    const info=getSCInfo(nm,'',r[RF.br]||'');
+    const br=normBr(info.branch||r[RF.br]||'?');
     const team=info.team||'ลาออก';
-    const key=info.code||nm;
-    if(team==='ลาออก'){
-      if(!resigned[br])resigned[br]={};
-      if(!resigned[br][key])resigned[br][key]={name:info.name||nm,code:info.code||'',bk:[],rs:[]};
-      resigned[br][key].rs.push(r);
-    } else {
-      if(!brTeam[br])brTeam[br]={};
-      if(!brTeam[br][team])brTeam[br][team]={};
-      if(!brTeam[br][team][key])brTeam[br][team][key]={name:info.name||nm,code:info.code||'',bk:[],rs:[]};
-      brTeam[br][team][key].rs.push(r);
-    }
+    const nameKey=normName(info.name||nm)||'unknown';
+    if(team==='ลาออก') getOrCreateRes(resigned,br,nameKey,info.name||nm,info.code||'').rs.push(r);
+    else getOrCreate(brTeam,br,team,nameKey,info.name||nm,info.code||'').rs.push(r);
   });
 
-  // ── build thead ──
+  // ── thead ──
   let h1=`<tr class="h1">
     <th rowspan="2" style="text-align:left;min-width:180px;padding:8px 12px">SC Team / ชื่อ</th>
-    <th rowspan="2" style="min-width:60px;font-size:10px">Code</th>`;
-  mos.forEach(m=>{h1+=`<th colspan="2" style="min-width:80px">${mLabel(m)}</th>`;});
+    <th rowspan="2" style="min-width:55px;font-size:10px">Code</th>`;
+  mos.forEach(m=>{h1+=`<th colspan="2" style="min-width:72px">${mLabel(m)}</th>`;});
   h1+=`<th colspan="2" style="min-width:80px;background:#1e3a8a">รวม</th>
-    <th rowspan="2" style="min-width:72px;background:#6d28d9;color:#fff;font-size:11px">เฉลี่ยขาย/<br>เดือน</th></tr>`;
+    <th rowspan="2" style="min-width:65px;background:#6d28d9;color:#fff;font-size:11px">เฉลี่ย<br>RS/เดือน</th></tr>`;
   let h2='<tr class="h2">';
   mos.forEach(()=>{h2+='<th class="bk-h">BK</th><th class="rs-h">RS</th>';});
   h2+='<th class="bk-h" style="background:#1e40af;color:#fff">BK</th><th class="rs-h" style="background:#166534;color:#fff">RS</th></tr>';
   $('sc6Head').innerHTML=h1+h2;
 
-  // helpers
   const totalCols=2+mos.length*2+3;
-  function countSC(v){
+
+  // helpers
+  function countV(v){
     const moBK={},moRS={};
     mos.forEach(m=>{moBK[m]=0;moRS[m]=0;});
-    v.bk.forEach(r=>{const m=r[BF.d]?.slice(0,7);if(m&&moBK[m]!==undefined)moBK[m]++;});
-    v.rs.forEach(r=>{const m=r[RF.d]?.slice(0,7);if(m&&moRS[m]!==undefined)moRS[m]++;});
+    v.bk.forEach(r=>{const m=r[BF.d]?.slice(0,7);if(m!==undefined&&moBK[m]!==undefined)moBK[m]++;});
+    v.rs.forEach(r=>{const m=r[RF.d]?.slice(0,7);if(m!==undefined&&moRS[m]!==undefined)moRS[m]++;});
     return{moBK,moRS,totBK:v.bk.length,totRS:v.rs.length};
   }
-  function scRow(v,indent,style){
-    const sc=countSC(v);
+
+  // SC row — 1 แถวเดียว BK+RS ในช่องเดียวกัน
+  function scRow(v, indent, nameStyle){
+    const sc=countV(v);
     const avg=(sc.totRS/moCount).toFixed(1);
-    let cells=`<td class="sc-name" style="padding-left:${indent}px;${style||''}">${v.name}</td>
-      <td class="sc-code">${v.code}</td>`;
+    let cells=`<td class="sc-name" style="padding-left:${indent}px;${nameStyle||''}">${v.name}</td>
+      <td class="sc-code" style="font-size:10px;color:#94a3b8;text-align:center">${v.code}</td>`;
     mos.forEach(m=>{
       const bkv=sc.moBK[m]||0, rsv=sc.moRS[m]||0;
-      cells+=`<td class="bk-val${!bkv?' zero':''}">${bkv||'-'}</td><td class="rs-val${!rsv?' zero':''}">${rsv||'-'}</td>`;
+      if(!bkv&&!rsv){
+        cells+='<td class="cz" colspan="2" style="text-align:center;color:#d1d5db">—</td>';
+      } else {
+        cells+=`<td class="bk-val${!bkv?' zero':''}">${bkv||'-'}</td>`;
+        cells+=`<td class="rs-val${!rsv?' zero':''}">${rsv||'-'}</td>`;
+      }
     });
-    cells+=`<td class="tot-bk">${sc.totBK||'-'}</td><td class="tot-rs">${sc.totRS||'-'}</td>
-      <td class="avg-rs">${avg}</td>`;
+    cells+=`<td class="tot-bk">${sc.totBK||'-'}</td>`;
+    cells+=`<td class="tot-rs">${sc.totRS||'-'}</td>`;
+    cells+=`<td class="avg-rs">${avg}</td>`;
     return `<tr>${cells}</tr>`;
   }
-  function sumRow(label,bkRows,rsRows,style,colspan2style){
+
+  // Sum row (team/branch)
+  function sumRow(label, allV, style, lblStyle){
     const moBK={},moRS={};
     mos.forEach(m=>{moBK[m]=0;moRS[m]=0;});
-    bkRows.forEach(r=>{const m=r[BF.d]?.slice(0,7);if(m&&moBK[m]!==undefined)moBK[m]++;});
-    rsRows.forEach(r=>{const m=r[RF.d]?.slice(0,7);if(m&&moRS[m]!==undefined)moRS[m]++;});
-    const totBK=bkRows.length,totRS=rsRows.length;
+    allV.forEach(v=>{
+      v.bk.forEach(r=>{const m=r[BF.d]?.slice(0,7);if(m!==undefined&&moBK[m]!==undefined)moBK[m]++;});
+      v.rs.forEach(r=>{const m=r[RF.d]?.slice(0,7);if(m!==undefined&&moRS[m]!==undefined)moRS[m]++;});
+    });
+    const totBK=allV.reduce((s,v)=>s+v.bk.length,0);
+    const totRS=allV.reduce((s,v)=>s+v.rs.length,0);
     const avg=(totRS/moCount).toFixed(1);
-    let cells=`<td colspan="2" style="${colspan2style||style||''}">${label}</td>`;
+    let cells=`<td colspan="2" style="${lblStyle||style||''}">${label}</td>`;
     mos.forEach(m=>{
       cells+=`<td class="bk-sum">${moBK[m]||0}</td><td class="rs-sum">${moRS[m]||0}</td>`;
     });
-    cells+=`<td class="bk-sum">${totBK}</td><td class="rs-sum">${totRS}</td>
-      <td style="background:#4c1d95;color:#e9d5ff;font-weight:800;text-align:center">${avg}</td>`;
+    cells+=`<td class="bk-sum">${totBK}</td><td class="rs-sum">${totRS}</td>`;
+    cells+=`<td style="background:#4c1d95;color:#e9d5ff;font-weight:800;text-align:center">${avg}</td>`;
     return `<tr style="${style||''}">${cells}</tr>`;
   }
 
-  // ── build tbody ──
+  // ── tbody ──
   const BR_DISPLAY=['SR','BS','BN','KS','FT&HO'];
   const allBrs=[...new Set([...Object.keys(brTeam),...Object.keys(resigned)])];
   const orderedBrs=[...BR_DISPLAY.filter(b=>allBrs.includes(b)),...allBrs.filter(b=>!BR_DISPLAY.includes(b)).sort()];
@@ -1890,80 +1887,94 @@ function renderSC6(){
   orderedBrs.forEach(br=>{
     if(!brTeam[br]) return;
     const brName={'SR':'ศรีนครินทร์','BS':'บางเสาธง','BN':'บางนา','KS':'เกษตร','FT&HO':'Fleet & HO'}[br]||br;
-    const brAllBK=Object.values(brTeam[br]).flatMap(tm=>Object.values(tm).flatMap(v=>v.bk));
-    const brAllRS=Object.values(brTeam[br]).flatMap(tm=>Object.values(tm).flatMap(v=>v.rs));
+    const brAllV=Object.values(brTeam[br]).flatMap(tm=>Object.values(tm));
+    const brTotBK=brAllV.reduce((s,v)=>s+v.bk.length,0);
+    const brTotRS=brAllV.reduce((s,v)=>s+v.rs.length,0);
 
-    // Branch header
     html+=`<tr><td colspan="${totalCols}" style="background:#1a3a5c;color:#fff;font-weight:800;font-size:13px;padding:8px 14px">
       🏢 ${br==='FT&HO'?'FT & HO':br} — ${brName}
-      <span style="float:right;font-size:12px;font-weight:400;opacity:.85">BK รวม: <b>${brAllBK.length}</b> &nbsp;|&nbsp; RS รวม: <b>${brAllRS.length}</b></span>
+      <span style="float:right;font-size:12px;font-weight:400;opacity:.85">BK รวม: <b>${brTotBK}</b> &nbsp;|&nbsp; RS รวม: <b>${brTotRS}</b></span>
     </td></tr>`;
 
     const teams=brTeam[br];
     const orderedTeams=[...TEAM_ORDER.filter(t=>teams[t]),...Object.keys(teams).filter(t=>!TEAM_ORDER.includes(t)).sort()];
-
     orderedTeams.forEach(team=>{
       const scMap=teams[team];
-      const tmBK=Object.values(scMap).flatMap(v=>v.bk);
-      const tmRS=Object.values(scMap).flatMap(v=>v.rs);
-      // Team header
+      const tmVals=Object.values(scMap);
       html+=sumRow(
         `<span style="background:#0d9488;color:#fff;border-radius:4px;padding:1px 9px;font-size:11px;font-weight:800">ทีม ${team}</span>`,
-        tmBK,tmRS,
+        tmVals,
         'background:#e8f5f0;font-weight:800',
         'background:#e8f5f0;font-weight:800;font-size:12px;padding:6px 14px'
       );
-      // SC rows
-      Object.entries(scMap).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','th')).forEach(([,v])=>{
+      Object.values(scMap).sort((a,b)=>(a.name||'').localeCompare(b.name||'','th')).forEach(v=>{
         html+=scRow(v,22,'');
       });
     });
   });
 
-  // ── พนักงานลาออก (ท้ายสุด) แยกตามสาขา ──
+  // พนักงานลาออก
   const resAllBrs=Object.keys(resigned).sort((a,b)=>{
-    const ord=BR_DISPLAY;
-    const ai=ord.indexOf(a),bi=ord.indexOf(b);
-    if(ai>=0&&bi>=0)return ai-bi;
-    if(ai>=0)return -1;if(bi>=0)return 1;
-    return a.localeCompare(b);
+    const ord=BR_DISPLAY;const ai=ord.indexOf(a),bi=ord.indexOf(b);
+    if(ai>=0&&bi>=0)return ai-bi;if(ai>=0)return -1;if(bi>=0)return 1;return a.localeCompare(b);
   });
   if(resAllBrs.length){
     html+=`<tr><td colspan="${totalCols}" style="background:#991b1b;color:#fff;font-weight:800;font-size:13px;padding:8px 14px">
-      👋 พนักงานลาออก
-      <span style="float:right;font-size:12px;font-weight:400;opacity:.85">SC ที่ไม่พบในระบบ</span>
+      👋 พนักงานลาออก <span style="float:right;font-size:12px;font-weight:400;opacity:.85">SC ที่ไม่พบในระบบ</span>
     </td></tr>`;
     resAllBrs.forEach(br=>{
       const scMap=resigned[br];
-      const brBK=Object.values(scMap).flatMap(v=>v.bk);
-      const brRS=Object.values(scMap).flatMap(v=>v.rs);
       const brName={'SR':'ศรีนครินทร์','BS':'บางเสาธง','BN':'บางนา','KS':'เกษตร','FT&HO':'Fleet & HO'}[br]||br;
-      // sub-header สาขา
-      html+=`<tr style="background:#fef2f2">
-        <td colspan="2" style="font-weight:700;font-size:12px;padding:6px 14px;color:#7f1d1d">
-          สาขา ${br} — ${brName}
-          <span style="font-size:11px;font-weight:400;margin-left:8px">BK: ${brBK.length} | RS: ${brRS.length}</span>
-        </td>`;
-      mos.forEach(m=>{
-        const mbk=brBK.filter(r=>r[BF.d]?.slice(0,7)===m).length;
-        const mrs=brRS.filter(r=>r[RF.d]?.slice(0,7)===m).length;
-        html+=`<td class="bk-sum" style="background:#fee2e2;color:#991b1b">${mbk||0}</td><td class="rs-sum" style="background:#fee2e2;color:#991b1b">${mrs||0}</td>`;
+      const brVals=Object.values(scMap);
+      html+=sumRow(
+        `สาขา ${br} — ${brName}`,
+        brVals,
+        'background:#fee2e2',
+        'background:#fee2e2;font-weight:700;color:#7f1d1d;padding:6px 14px'
+      );
+      Object.values(scMap).sort((a,b)=>(a.name||'').localeCompare(b.name||'','th')).forEach(v=>{
+        html+=scRow(v,22,'color:#991b1b');
       });
-      html+=`<td class="bk-sum" style="background:#fca5a5;color:#7f1d1d">${brBK.length}</td>
-             <td class="rs-sum" style="background:#fca5a5;color:#7f1d1d">${brRS.length}</td>
-             <td style="background:#fca5a5;color:#7f1d1d;text-align:center;font-weight:800">${(brRS.length/moCount).toFixed(1)}</td>
-      </tr>`;
-      // SC rows
-      Object.entries(scMap)
-        .sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'','th'))
-        .forEach(([,v])=>{
-          html+=scRow(v,22,'color:#991b1b');
-        });
     });
   }
 
   $('sc6Body').innerHTML=html;
 }
+
+
+function initSC6(){
+  // Set default date range: first and last date in data
+  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
+  if(allDates.length){
+    $('sc6From').value=allDates[0];
+    $('sc6To').value=allDates[allDates.length-1];
+  }
+}
+function resetSC6(){
+  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
+  if(allDates.length){
+    $('sc6From').value=allDates[0];
+    $('sc6To').value=allDates[allDates.length-1];
+  }
+  renderSC6();
+}
+function getSC6Data(){
+  const from=$('sc6From').value, to=$('sc6To').value;
+  const bk=BK.filter(r=>{
+    const d=r[BF.d]||'';
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    return true;
+  });
+  const rs=RS.filter(r=>{
+    const d=r[RF.d]||'';
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    return true;
+  });
+  return{bk,rs};
+}
+
 
 
 function rkRankCls(i){return i===0?'gold':i===1?'silver':i===2?'bronze':'';}
