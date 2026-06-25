@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>BK&RS — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -280,7 +281,32 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
       <button class="btnf ap" onclick="applyBK()">🔍 กรอง</button>
       <button class="btnf re" onclick="resetBK()">↺ รีเซ็ต</button>
     </div>
-
+  </div>
+  <!-- Comparison Filter -->
+  <div class="fbar" style="background:#f0f7ff;border-top:2px solid #bfdbfe;padding:8px 16px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+    <div style="font-size:11px;font-weight:800;color:#1e40af;align-self:center">📊 เปรียบเทียบ:</div>
+    <div class="fg">
+      <label>ช่วงเวลา</label>
+      <select id="bkCmpType" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px" onchange="updateBKCmpOptions()">
+        <option value="">— ไม่เปรียบเทียบ —</option>
+        <option value="month">เดือน</option>
+        <option value="quarter">ไตรมาส</option>
+        <option value="year">ปี</option>
+      </select>
+    </div>
+    <div class="fg" id="bkCmpYrWrap" style="display:none">
+      <label>ปี</label>
+      <select id="bkCmpYr" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px"></select>
+    </div>
+    <div class="fg" id="bkCmpNWrap" style="display:none">
+      <label id="bkCmpNLabel">จำนวนช่วงย้อนหลัง</label>
+      <input type="number" id="bkCmpN" min="1" max="24" value="3" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:80px">
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end" id="bkCmpBtnWrap" style="display:none">
+      <button class="btnf ap" onclick="applyBKCmp()" style="background:#1e40af">📊 แสดงกราฟ</button>
+      <button class="btnf re" onclick="resetBKCmp()">↺ รีเซ็ต</button>
+    </div>
+    <span id="bkCmpLabel" style="font-size:11px;color:#3b82f6;font-weight:700;align-self:center"></span>
   </div>
   <div class="stabs">
     <div class="stab on" data-s="" onclick="setSt(this)">ทั้งหมด</div>
@@ -310,6 +336,32 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
       <button class="btnf ap rs" onclick="applyRS()">🔍 กรอง</button>
       <button class="btnf re"    onclick="resetRS()">↺ รีเซ็ต</button>
     </div>
+  </div>
+  <!-- Comparison Filter -->
+  <div class="fbar rs" style="background:#f0fff4;border-top:2px solid #bbf7d0;padding:8px 16px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+    <div style="font-size:11px;font-weight:800;color:#166534;align-self:center">📊 เปรียบเทียบ:</div>
+    <div class="fg">
+      <label>ช่วงเวลา</label>
+      <select id="rsCmpType" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px" onchange="updateRSCmpOptions()">
+        <option value="">— ไม่เปรียบเทียบ —</option>
+        <option value="month">เดือน</option>
+        <option value="quarter">ไตรมาส</option>
+        <option value="year">ปี</option>
+      </select>
+    </div>
+    <div class="fg" id="rsCmpYrWrap" style="display:none">
+      <label>ปี</label>
+      <select id="rsCmpYr" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px"></select>
+    </div>
+    <div class="fg" id="rsCmpNWrap" style="display:none">
+      <label id="rsCmpNLabel">จำนวนช่วงย้อนหลัง</label>
+      <input type="number" id="rsCmpN" min="1" max="24" value="3" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;width:80px">
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end" id="rsCmpBtnWrap">
+      <button class="btnf ap" onclick="applyRSCmp()" style="background:#166534">📊 แสดงกราฟ</button>
+      <button class="btnf re" onclick="resetRSCmp()">↺ รีเซ็ต</button>
+    </div>
+    <span id="rsCmpLabel" style="font-size:11px;color:#16a34a;font-weight:700;align-self:center"></span>
   </div>
   <div class="krow">
     <div class="kpi rs"><div class="kl">ขายทั้งหมด</div><div class="kv" id="rkT">0</div><div class="ks">คัน</div></div>
@@ -643,6 +695,8 @@ function getSCInfo(scName,scCode,fallbackBranch){
 }
 let bkSt='', curTab=1, rs4Mode='all', bk2Mode='all';
 let CH={};
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels = { display: false };
 
 const $=id=>document.getElementById(id);
 function toast(msg,ok=true){
@@ -831,8 +885,18 @@ function stk100(id,data,grpFi,mgFilter,FI){
     type:'bar',
     data:{labels:mos.map(mLabel),datasets:cats.map((c,i)=>({label:c,data:mos.map(m=>tots[m]>0?+(mat[c][m]/tots[m]*100).toFixed(1):0),backgroundColor:getColor(c,i)+'cc',borderColor:getColor(c,i),borderWidth:1,borderRadius:2}))},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:5,filter:item=>item.text!=='(ไม่ระบุ type)'||true}},
-        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}% (${Math.round(tots[mos[c.dataIndex]]*c.parsed.y/100)} คัน)`}}},
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:5,filter:item=>item.text!=='(ไม่ระบุ type)'||true}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}% (${Math.round(tots[mos[c.dataIndex]]*c.parsed.y/100)} คัน)`}},
+        datalabels:{
+          display:ctx=>ctx.dataset.data[ctx.dataIndex]>=5,
+          color:'#fff',
+          font:{size:10,weight:'bold'},
+          formatter:v=>v>=5?v.toFixed(0)+'%':'',
+          anchor:'center',align:'center',
+          textShadow:'0 1px 2px rgba(0,0,0,.4)'
+        }
+      },
       scales:{x:{stacked:true,ticks:{font:{size:11}}},y:{stacked:true,min:0,max:100,ticks:{callback:v=>v+'%',font:{size:11}},grid:{color:'#eee'}}}}
   });
 }
@@ -847,7 +911,17 @@ function stkAbs(id,data,grpFi,FI){
     type:'bar',
     data:{labels:mos.map(mLabel),datasets:cats.map((c,i)=>({label:c,data:mos.map(m=>mat[c][m]||0),backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:2}))},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:5}},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} คัน`}}},
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:5}},
+        tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} คัน`}},
+        datalabels:{
+          display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,
+          color:'#fff',font:{size:10,weight:'bold'},
+          formatter:v=>v>0?v:'',
+          anchor:'center',align:'center',
+          textShadow:'0 1px 2px rgba(0,0,0,.4)'
+        }
+      },
       scales:{x:{stacked:true,ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}},grid:{color:'#eee'}}}}
   });
 }
@@ -861,12 +935,266 @@ function donut(id,data,grpFi,FI){
     type:'doughnut',
     data:{labels:e.map(x=>x[0]),datasets:[{data:e.map(x=>x[1]),backgroundColor:PAL.slice(0,e.length),borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},tooltip:{callbacks:{label:c=>{const p=tot>0?+(c.parsed/tot*100).toFixed(1):0;return ` ${c.label}: ${p}% (${c.parsed})`;}}}}
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:c=>{const p=tot>0?+(c.parsed/tot*100).toFixed(1):0;return ` ${c.label}: ${p}% (${c.parsed})`; }}},
+        datalabels:{
+          display:ctx=>{const p=tot>0?ctx.dataset.data[ctx.dataIndex]/tot*100:0;return p>=5;},
+          color:'#fff',font:{size:11,weight:'bold'},
+          formatter:(v)=>{const p=tot>0?+(v/tot*100).toFixed(1):0;return p>=5?p+'%':'';},
+          textShadow:'0 1px 2px rgba(0,0,0,.5)'
+        }
+      }
     }
   });
 }
 
 // ── TAB 1: BK Overview ──────────────────────────────────────────────────────
+// ── COMPARISON FILTER LOGIC ─────────────────────────────────────────────────
+
+// helper: สร้างช่วงเวลาจาก data
+function getAvailableYears(data, FI){
+  return [...new Set(data.map(r=>(r[FI.d]||'').slice(0,4)).filter(Boolean))].sort();
+}
+
+// helper: label ของแต่ละช่วง
+function cmpLabel(type, yr, idx, n){
+  if(type==='month'){
+    // idx = 0..n-1 โดย 0=เก่าสุด n-1=ล่าสุด
+    // คำนวณจาก "ปัจจุบัน" ย้อนหลัง n-1-idx
+    const now=new Date();
+    const offset=n-1-idx;
+    const d=new Date(now.getFullYear(),now.getMonth()-offset,1);
+    const thMo=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return thMo[d.getMonth()]+" '"+(d.getFullYear()%100).toString().padStart(2,'0');
+  }
+  if(type==='quarter'){
+    const now=new Date();
+    const curQ=Math.floor(now.getMonth()/3);
+    const curY=now.getFullYear();
+    const offset=n-1-idx;
+    let q=curQ-offset, y=curY;
+    while(q<0){q+=4;y--;}
+    return `Q${q+1}'${(y%100).toString().padStart(2,'0')}`;
+  }
+  if(type==='year'){
+    const now=new Date();
+    return String(now.getFullYear()-(n-1-idx));
+  }
+  return '';
+}
+
+// helper: filter data ตาม period
+function filterByPeriod(data, FI, type, idx, n){
+  const now=new Date();
+  if(type==='month'){
+    const offset=n-1-idx;
+    const d=new Date(now.getFullYear(),now.getMonth()-offset,1);
+    const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return data.filter(r=>(r[FI.d]||'').startsWith(ym));
+  }
+  if(type==='quarter'){
+    const curQ=Math.floor(now.getMonth()/3);
+    const curY=now.getFullYear();
+    const offset=n-1-idx;
+    let q=curQ-offset,y=curY;
+    while(q<0){q+=4;y--;}
+    const startM=q*3+1, endM=q*3+3;
+    return data.filter(r=>{
+      const d=r[FI.d]||'';if(!d)return false;
+      const dy=parseInt(d.slice(0,4)),dm=parseInt(d.slice(5,7));
+      return dy===y&&dm>=startM&&dm<=endM;
+    });
+  }
+  if(type==='year'){
+    const y=now.getFullYear()-(n-1-idx);
+    return data.filter(r=>(r[FI.d]||'').startsWith(String(y)));
+  }
+  return [];
+}
+
+// update UI options เมื่อเลือก type
+function updateBKCmpOptions(){
+  const t=$('bkCmpType').value;
+  $('bkCmpYrWrap').style.display='none';
+  $('bkCmpNWrap').style.display=t?'block':'none';
+  $('bkCmpBtnWrap').style.display=t?'flex':'none';
+  if(t==='month') $('bkCmpNLabel').textContent='เดือนย้อนหลัง';
+  if(t==='quarter') $('bkCmpNLabel').textContent='ไตรมาสย้อนหลัง';
+  if(t==='year') $('bkCmpNLabel').textContent='ปีย้อนหลัง';
+  if(!t){ $('bkCmpLabel').textContent=''; resetBKCmp(); }
+}
+function updateRSCmpOptions(){
+  const t=$('rsCmpType').value;
+  $('rsCmpYrWrap').style.display='none';
+  $('rsCmpNWrap').style.display=t?'block':'none';
+  $('rsCmpBtnWrap').style.display=t?'flex':'none';
+  if(t==='month') $('rsCmpNLabel').textContent='เดือนย้อนหลัง';
+  if(t==='quarter') $('rsCmpNLabel').textContent='ไตรมาสย้อนหลัง';
+  if(t==='year') $('rsCmpNLabel').textContent='ปีย้อนหลัง';
+  if(!t){ $('rsCmpLabel').textContent=''; resetRSCmp(); }
+}
+
+// state
+let bkCmpActive=false, rsCmpActive=false;
+
+function applyBKCmp(){
+  const type=$('bkCmpType').value;
+  const n=Math.max(1,parseInt($('bkCmpN').value)||3);
+  if(!type) return;
+  bkCmpActive=true;
+  const d=getBK();
+  const labels=Array.from({length:n},(_,i)=>cmpLabel(type,null,i,n));
+  $('bkCmpLabel').textContent=`แสดง: ${labels.join(' / ')}`;
+  renderBK1Cmp(d,type,n);
+}
+function resetBKCmp(){
+  bkCmpActive=false;
+  $('bkCmpLabel').textContent='';
+  const d=getBK();
+  kpiBK(d); renderBK1(d);
+}
+function applyRSCmp(){
+  const type=$('rsCmpType').value;
+  const n=Math.max(1,parseInt($('rsCmpN').value)||3);
+  if(!type) return;
+  rsCmpActive=true;
+  const d=getRS();
+  const labels=Array.from({length:n},(_,i)=>cmpLabel(type,null,i,n));
+  $('rsCmpLabel').textContent=`แสดง: ${labels.join(' / ')}`;
+  renderRS3Cmp(d,type,n);
+}
+function resetRSCmp(){
+  rsCmpActive=false;
+  $('rsCmpLabel').textContent='';
+  const d=getRS();
+  kpiRS(d); renderRS3(d);
+}
+
+// กราฟ bar เปรียบเทียบช่วงเวลา — grouped bar
+function cmpBarChart(id, labels, datasets, yLabel){
+  dC(id);
+  if(CH[id]){CH[id].destroy();delete CH[id];}
+  const el=$(id); if(!el) return;
+  CH[id]=new Chart(el.getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} ${yLabel||'คัน'}`}},
+        datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,color:'#fff',font:{size:11,weight:'bold'},formatter:v=>v>0?v:'',anchor:'end',align:'end',color:'#374151'}
+      },
+      scales:{x:{ticks:{font:{size:12}}},y:{beginAtZero:true,ticks:{font:{size:11}},grid:{color:'#eee'}}}}
+  });
+}
+
+// render BK1 แบบ comparison
+function renderBK1Cmp(data, type, n){
+  const periods=Array.from({length:n},(_,i)=>filterByPeriod(data,BF,type,i,n));
+  const labels=Array.from({length:n},(_,i)=>cmpLabel(type,null,i,n));
+  const CMP_PAL=['#1a3a5c','#2563eb','#0ea5e9','#06b6d4','#0d9488','#059669'];
+
+  // MU-X Type grouped
+  dC('cMUX');
+  const muxTypes=[...new Set(data.filter(r=>r[BF.mg]==='MU-X').map(r=>r[BF.tp]||'(ไม่ระบุ)'))].sort();
+  cmpBarChart('cMUX',labels,muxTypes.map((t,i)=>({
+    label:t,
+    data:periods.map(p=>p.filter(r=>r[BF.mg]==='MU-X'&&(r[BF.tp]||'(ไม่ระบุ)')=== t).length),
+    backgroundColor:CMP_PAL[i%CMP_PAL.length]+'cc',borderColor:CMP_PAL[i%CMP_PAL.length],borderWidth:1,borderRadius:3
+  })));
+
+  // P-UP Type grouped
+  dC('cPUP');
+  const pupTypes=[...new Set(data.filter(r=>r[BF.mg]==='P-UP').map(r=>r[BF.tp]||'(ไม่ระบุ)'))].sort();
+  const pupPal=['#e84c1e','#f97316','#eab308','#84cc16','#22c55e','#10b981'];
+  cmpBarChart('cPUP',labels,pupTypes.map((t,i)=>({
+    label:t,
+    data:periods.map(p=>p.filter(r=>r[BF.mg]==='P-UP'&&(r[BF.tp]||'(ไม่ระบุ)')=== t).length),
+    backgroundColor:pupPal[i%pupPal.length]+'cc',borderColor:pupPal[i%pupPal.length],borderWidth:1,borderRadius:3
+  })));
+
+  // Purchase Type
+  dC('cPT');
+  const ptTypes=[...new Set(data.map(r=>r[BF.pt]||'').filter(Boolean))].sort();
+  cmpBarChart('cPT',labels,ptTypes.map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>r[BF.pt]===t).length),
+    backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
+  })));
+
+  // Finance
+  dC('cBkFin');
+  const fiTypes=[...new Set(data.map(r=>r[BF.fi]?BK_FI_MAP[r[BF.fi]]||r[BF.fi]:'').filter(Boolean))].sort();
+  cmpBarChart('cBkFin',labels,fiTypes.map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>(BK_FI_MAP[r[BF.fi]]||r[BF.fi])===t).length),
+    backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
+  })));
+
+  // Contact Source
+  dC('cSrc');
+  const srcTypes=[...new Set(data.map(r=>r[BF.cs]||'').filter(Boolean))].sort();
+  cmpBarChart('cSrc',labels,srcTypes.map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>r[BF.cs]===t).length),
+    backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
+  })));
+
+  // อาชีพ
+  dC('cOcc');
+  const occTypes=[...new Set(data.map(r=>r[BF.oc]||'').filter(Boolean))].sort();
+  cmpBarChart('cOcc',labels,occTypes.map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>r[BF.oc]===t).length),
+    backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
+  })));
+}
+
+// render RS3 แบบ comparison
+function renderRS3Cmp(data, type, n){
+  const periods=Array.from({length:n},(_,i)=>filterByPeriod(data,RF,type,i,n));
+  const labels=Array.from({length:n},(_,i)=>cmpLabel(type,null,i,n));
+  const CMP_PAL=['#166534','#16a34a','#22c55e','#4ade80','#86efac'];
+
+  // MU-X Type
+  dC('rMUX');
+  const muxTypes=[...new Set(data.filter(r=>r[RF.mg]==='MU-X').map(r=>r[RF.tp]||'(ไม่ระบุ)'))].sort();
+  const muxPal=['#1a3a5c','#2563eb','#0ea5e9','#06b6d4'];
+  cmpBarChart('rMUX',labels,muxTypes.map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>r[RF.mg]==='MU-X'&&(r[RF.tp]||'(ไม่ระบุ)')=== t).length),
+    backgroundColor:muxPal[i%muxPal.length]+'cc',borderColor:muxPal[i%muxPal.length],borderWidth:1,borderRadius:3
+  })));
+
+  // P-UP Type
+  dC('rPUP');
+  const pupTypes=[...new Set(data.filter(r=>r[RF.mg]==='P-UP').map(r=>r[RF.tp]||'(ไม่ระบุ)'))].sort();
+  const pupPal=['#e84c1e','#f97316','#eab308','#84cc16','#22c55e','#10b981'];
+  cmpBarChart('rPUP',labels,pupTypes.map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>r[RF.mg]==='P-UP'&&(r[RF.tp]||'(ไม่ระบุ)')=== t).length),
+    backgroundColor:pupPal[i%pupPal.length]+'cc',borderColor:pupPal[i%pupPal.length],borderWidth:1,borderRadius:3
+  })));
+
+  // MU-X vs P-UP
+  dC('rMoMG');
+  cmpBarChart('rMoMG',labels,[
+    {label:'MU-X',data:periods.map(p=>p.filter(r=>r[RF.mg]==='MU-X').length),backgroundColor:'#1a3a5cbb',borderColor:'#1a3a5c',borderWidth:1,borderRadius:3},
+    {label:'P-UP',data:periods.map(p=>p.filter(r=>r[RF.mg]==='P-UP').length),backgroundColor:'#e84c1ebb',borderColor:'#e84c1e',borderWidth:1,borderRadius:3},
+  ]);
+
+  // สาขา
+  dC('rMoBr');
+  const brTypes=[...new Set(data.map(r=>r[RF.br]||'').filter(Boolean))].sort();
+  cmpBarChart('rMoBr',labels,brTypes.map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>r[RF.br]===t).length),
+    backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
+  })));
+
+  // Finance
+  dC('rFin');
+  const fiTypes=[...new Set(data.map(r=>r[RF.fi]||'').filter(Boolean))].sort();
+  cmpBarChart('rFin',labels,fiTypes.slice(0,6).map((t,i)=>({
+    label:t,data:periods.map(p=>p.filter(r=>r[RF.fi]===t).length),
+    backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3
+  })));
+}
+
 function renderBK1(d){
   // debug: แสดงสถิติ type ใน console
   const muxRows=d.filter(r=>r[BF.mg]==='MU-X'), pupRows=d.filter(r=>r[BF.mg]==='P-UP');
@@ -894,7 +1222,11 @@ function renderBK1(d){
       type:'bar',
       data:{labels:mos.map(mLabel),datasets:cats.map((c,i)=>({label:c,data:mos.map(m=>mat[c][m]||0),backgroundColor:PAL[i%PAL.length]+'cc',borderColor:PAL[i%PAL.length],borderWidth:1,borderRadius:3,stack:'s'}))},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:5}},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} คัน`}}},
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:5}},
+          tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} คัน`}},
+          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,color:'#fff',font:{size:10,weight:'bold'},formatter:v=>v>0?v:'',anchor:'center',align:'center'}
+        },
         scales:{x:{stacked:true,ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}},grid:{color:'#eee'}}}}
     });
   }
@@ -939,7 +1271,11 @@ function renderRS3(d){
         {label:'P-UP',data:mos.map(m=>pp[m]),backgroundColor:'#e84c1ebb',borderColor:'#e84c1e',borderWidth:1,borderRadius:3,stack:'s'},
       ]},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} คัน`}}},
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+          tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} คัน`}},
+          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,color:'#fff',font:{size:10,weight:'bold'},formatter:v=>v>0?v:'',anchor:'center',align:'center'}
+        },
         scales:{x:{stacked:true,ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}},grid:{color:'#eee'}}}}
     });
   }
@@ -1028,7 +1364,11 @@ function buildBranchCharts(gridId,pfx,data,FI,isRS){
         {label:'P-UP',data:dates.map(d=>ppD[d]),backgroundColor:'#e84c1ebb',borderColor:'#e84c1e',borderWidth:1,borderRadius:2,stack:'s'},
       ]},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}}},
+        plugins:{
+          legend:{display:false},
+          tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}},
+          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,color:'#fff',font:{size:8,weight:'bold'},formatter:v=>v>0?v:'',anchor:'center',align:'center'}
+        },
         scales:{x:{stacked:true,ticks:{font:{size:9},maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},grid:{color:'#eee'}}}}
     });
   });
