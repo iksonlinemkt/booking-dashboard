@@ -668,7 +668,7 @@ const PAL=['#1a3a5c','#e84c1e','#1db87a','#f5a623','#7b5ea7','#3a86ff','#f72585'
 
 // ── GAS CONFIG ────────────────────────────────────────────────────────────────
 // วาง GAS Web App URL ที่นี่ หรือจะใส่ผ่าน popup เมื่อเปิดหน้าแรก
-let GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/macros/s/AKfycbzH52jAo5WOgXD2b8-9TJ62T2metPl5ih7PmlO6B_YX7S4e3HVSW2uESvgER0F4942BCg/exec';
+let GAS_URL = localStorage.getItem('iks_gas_url') || 'https://script.google.com/macros/s/AKfycbwfAsD_wr2ZIo5xlBknSQURculpjhaPDeglqAj1zizXjXO4PDT0Lj-iHt9C6M5_7tlTKQ/exec';
 
 // ── EMPTY INITIAL ARRAYS ─────────────────────────────────────────────────────
 let BK=[], RS=[];
@@ -741,7 +741,9 @@ function setOpts(id,vals){
 }
 function initBK(data){
   const dates=data.map(r=>r[BF.d]).filter(Boolean).sort();
-  if(dates.length){$('bkFrom').value=dates[0];$('bkTo').value=dates[dates.length-1];}
+  // ตั้งค่าวันที่เฉพาะครั้งแรก (ไม่ override ค่าที่ผู้ใช้ตั้งไว้)
+  if(dates.length&&!$('bkFrom').value){$('bkFrom').value=dates[0];}
+  if(dates.length&&!$('bkTo').value){$('bkTo').value=dates[dates.length-1];}
   setOpts('bkBr',[...new Set(data.map(r=>r[BF.br]).filter(Boolean))].sort());
   setOpts('bkSC',[...new Set(data.map(r=>r[BF.sc]).filter(Boolean))].sort());
 }
@@ -787,7 +789,9 @@ function kpiBK(d){
 
 function initRS(data){
   const dates=data.map(r=>r[RF.d]).filter(Boolean).sort();
-  if(dates.length){$('rsFrom').value=dates[0];$('rsTo').value=dates[dates.length-1];}
+  // ตั้งค่าวันที่เฉพาะครั้งแรก (ไม่ override ค่าที่ผู้ใช้ตั้งไว้)
+  if(dates.length&&!$('rsFrom').value){$('rsFrom').value=dates[0];}
+  if(dates.length&&!$('rsTo').value){$('rsTo').value=dates[dates.length-1];}
   setOpts('rsBr',[...new Set(data.map(r=>r[RF.br]).filter(Boolean))].sort());
   setOpts('rsSC',[...new Set(data.map(r=>r[RF.sc]).filter(Boolean))].sort());
 }
@@ -1696,7 +1700,7 @@ function handleImport(ev,type){
           const fi=String(g(r,'finance')).trim();
           return[fmtDate(g(r,'date')),String(g(r,'branch')).trim(),String(g(r,'sc_name')).replace(/\xa0/g,' ').trim().replace(/ {2,}/g,' '),mg,tp,String(g(r,'occupation')).trim(),String(g(r,'purchase_type')).trim(),String(g(r,'contact_source')).trim(),String(g(r,'status')).trim(),String(g(r,'sc_code')).trim(),fi==='None'?'':fi];
         });
-        initBK(BK);resetBK();initTP();initSC6();initRK7();initT8();
+        initBK(BK);initTP();initSC6();initRK7();initT8();render();
         updateDataStatus();
         toast('✅ Booking (Excel): โหลด '+BK.length+' รายการ');
       }else{
@@ -1709,7 +1713,7 @@ function handleImport(ev,type){
           const mc=String(g(r,'model_code')).trim();const mi=mm[mc]||{g:'',t:''};
           return[fmtDate(g(r,'date')),String(g(r,'branch')).trim(),String(g(r,'sc_name')).replace(/\xa0/g,' ').trim().replace(/ {2,}/g,' '),mi.g,mi.t,String(g(r,'customer')).trim(),String(g(r,'bill_to')).trim(),String(g(r,'so_no')).trim(),String(g(r,'finance')).trim()];
         });
-        initRS(RS);resetRS();initTP();initSC6();initRK7();initT8();
+        initRS(RS);initTP();initSC6();initRK7();initT8();render();
         updateDataStatus();
         toast('✅ RS (Excel): โหลด '+RS.length+' รายการ');
       }
