@@ -1852,17 +1852,11 @@ function initSC6(){
   }
 }
 function resetSC6(){
+  // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
   setDMY('sc6From','2026-01-01');
   const allDates=[...new Set([...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean))].sort();
   if(allDates.length) setDMY('sc6To',allDates[allDates.length-1]);
   applyDMY('sc6From');applyDMY('sc6To');
-  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
-  if(allDates.length){
-    // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
-    setDMY('sc6From','2026-01-01');
-    setDMY('sc6To',allDates[allDates.length-1]);
-    applyDMY('sc6From');applyDMY('sc6To');
-  }
   renderSC6();
 }
 function getSC6Data(){
