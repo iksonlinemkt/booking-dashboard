@@ -273,8 +273,22 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 <!-- BK FILTER -->
 <div id="bkArea">
   <div class="fbar">
-    <div class="fg"><label>วันเริ่มต้น</label><input type="date" id="bkFrom" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
-    <div class="fg"><label>วันสิ้นสุด</label><input type="date" id="bkTo" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
+    <div class="fg"><label>วันเริ่มต้น (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px;align-items:center">
+        <input type="number" id="bkFromD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('bkFrom')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="bkFromM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('bkFrom')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="bkFromY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('bkFrom')">
+        <input type="hidden" id="bkFrom">
+      </div></div>
+    <div class="fg"><label>วันสิ้นสุด (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px;align-items:center">
+        <input type="number" id="bkToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('bkTo')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="bkToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('bkTo')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="bkToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('bkTo')">
+        <input type="hidden" id="bkTo">
+      </div></div>
     <div class="fg"><label>สาขา</label><select id="bkBr"></select></div>
     <div class="fg"><label>SC</label><select id="bkSC"></select></div>
     <div style="display:flex;gap:8px;align-items:flex-end;">
@@ -328,8 +342,22 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 <!-- RS FILTER -->
 <div id="rsArea" style="display:none">
   <div class="fbar rs">
-    <div class="fg"><label>วันเริ่มต้น</label><input type="date" id="rsFrom" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
-    <div class="fg"><label>วันสิ้นสุด</label><input type="date" id="rsTo" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
+    <div class="fg"><label>วันเริ่มต้น (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px;align-items:center">
+        <input type="number" id="rsFromD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('rsFrom')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="rsFromM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('rsFrom')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="rsFromY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('rsFrom')">
+        <input type="hidden" id="rsFrom">
+      </div></div>
+    <div class="fg"><label>วันสิ้นสุด (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px;align-items:center">
+        <input type="number" id="rsToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('rsTo')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="rsToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('rsTo')">
+        <span style="color:var(--mut)">/</span>
+        <input type="number" id="rsToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('rsTo')">
+        <input type="hidden" id="rsTo">
+      </div></div>
     <div class="fg"><label>สาขา</label><select id="rsBr"></select></div>
     <div class="fg"><label>SC</label><select id="rsSC"></select></div>
     <div style="display:flex;gap:8px;align-items:flex-end;">
@@ -774,8 +802,11 @@ function setOpts(id,vals){
 function initBK(data){
   const dates=data.map(r=>r[BF.d]).filter(Boolean).sort();
   // ตั้งค่าวันที่เฉพาะครั้งแรก (ไม่ override ค่าที่ผู้ใช้ตั้งไว้)
-  if(dates.length&&!$('bkFrom').value){$('bkFrom').value=dates[0];}
-  if(dates.length&&!$('bkTo').value){$('bkTo').value=dates[dates.length-1];}
+  if(dates.length&&!$('bkFrom').value){
+    setDMY('bkFrom',dates[0]);
+    setDMY('bkTo',dates[dates.length-1]);
+    applyDMY('bkFrom');applyDMY('bkTo');
+  }
   setOpts('bkBr',[...new Set(data.map(r=>r[BF.br]).filter(Boolean))].sort());
   setOpts('bkSC',[...new Set(data.map(r=>r[BF.sc]).filter(Boolean))].sort());
 }
@@ -808,7 +839,7 @@ function setSt(el){
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');bkSt=el.dataset.s;render();
 }
-function applyBK(){render();}
+function applyBK(){applyDMY('bkFrom');applyDMY('bkTo');render();}
 function resetBK(){
   const dates=BK.map(r=>r[BF.d]).filter(Boolean).sort();
   if(dates.length){$('bkFrom').value=dates[0];$('bkTo').value=dates[dates.length-1];}
@@ -831,8 +862,11 @@ function kpiBK(d){
 function initRS(data){
   const dates=data.map(r=>r[RF.d]).filter(Boolean).sort();
   // ตั้งค่าวันที่เฉพาะครั้งแรก (ไม่ override ค่าที่ผู้ใช้ตั้งไว้)
-  if(dates.length&&!$('rsFrom').value){$('rsFrom').value=dates[0];}
-  if(dates.length&&!$('rsTo').value){$('rsTo').value=dates[dates.length-1];}
+  if(dates.length&&!$('rsFrom').value){
+    setDMY('rsFrom',dates[0]);
+    setDMY('rsTo',dates[dates.length-1]);
+    applyDMY('rsFrom');applyDMY('rsTo');
+  }
   setOpts('rsBr',[...new Set(data.map(r=>r[RF.br]).filter(Boolean))].sort());
   setOpts('rsSC',[...new Set(data.map(r=>r[RF.sc]).filter(Boolean))].sort());
 }
@@ -852,7 +886,7 @@ function getRS(){
     return true;
   });
 }
-function applyRS(){render();}
+function applyRS(){applyDMY('rsFrom');applyDMY('rsTo');render();}
 function resetRS(){
   const dates=RS.map(r=>r[RF.d]).filter(Boolean).sort();
   if(dates.length){$('rsFrom').value=dates[0];$('rsTo').value=dates[dates.length-1];}
