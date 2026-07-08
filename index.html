@@ -375,14 +375,32 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 <!-- TP FILTER -->
 <div id="tpArea" style="display:none">
   <div class="fbar tp">
-    <div class="fg"><label>ปี</label><select id="tpYr"></select></div>
-    <div class="fg"><label>เดือน</label>
-      <select id="tpMo"><option value="">ทั้งหมด</option>
+    <div class="fg">
+      <label>เดือนเริ่มต้น</label>
+      <select id="tpFromMo" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
         <option value="1">ม.ค.</option><option value="2">ก.พ.</option><option value="3">มี.ค.</option>
         <option value="4">เม.ย.</option><option value="5">พ.ค.</option><option value="6">มิ.ย.</option>
         <option value="7">ก.ค.</option><option value="8">ส.ค.</option><option value="9">ก.ย.</option>
         <option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option>
       </select>
+    </div>
+    <div class="fg">
+      <label>ปีเริ่มต้น</label>
+      <select id="tpFromYr" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px"></select>
+    </div>
+    <div style="align-self:flex-end;font-size:13px;color:var(--mut);padding-bottom:8px">ถึง</div>
+    <div class="fg">
+      <label>เดือนสิ้นสุด</label>
+      <select id="tpToMo" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+        <option value="1">ม.ค.</option><option value="2">ก.พ.</option><option value="3">มี.ค.</option>
+        <option value="4">เม.ย.</option><option value="5">พ.ค.</option><option value="6">มิ.ย.</option>
+        <option value="7">ก.ค.</option><option value="8">ส.ค.</option><option value="9">ก.ย.</option>
+        <option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>ปีสิ้นสุด</label>
+      <select id="tpToYr" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px"></select>
     </div>
     <div style="display:flex;gap:8px;align-items:flex-end;">
       <button class="btnf ap tp" onclick="renderTP5()">🔍 กรอง</button>
@@ -395,9 +413,21 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 <!-- SC6 FILTER -->
 <div id="sc6Area" style="display:none">
   <div class="sc6-filter">
-    <div><label>วันเริ่มต้น</label><input type="date" id="sc6From" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
-    <div><label>วันสิ้นสุด</label><input type="date" id="sc6To" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
-    <button class="btnf ap" style="background:#0d9488" onclick="renderSC6()">🔍 กรอง</button>
+    <div><label>วันเริ่มต้น</label>
+      <div style="display:flex;gap:4px">
+        <input type="number" id="sc6FromD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+        <input type="number" id="sc6FromM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+        <input type="number" id="sc6FromY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+        <input type="hidden" id="sc6From">
+      </div></div>
+    <div><label>วันสิ้นสุด</label>
+      <div style="display:flex;gap:4px">
+        <input type="number" id="sc6ToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+        <input type="number" id="sc6ToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+        <input type="number" id="sc6ToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+        <input type="hidden" id="sc6To">
+      </div></div>
+    <button class="btnf ap" style="background:#0d9488" onclick="applyDMY('sc6From');applyDMY('sc6To');renderSC6()">🔍 กรอง</button>
     <button class="btnf" style="background:#e5e7eb;color:#374151" onclick="resetSC6()">↺ รีเซ็ต</button>
   </div>
 </div>
@@ -405,9 +435,9 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 <!-- SC7 FILTER -->
 <div id="sc7Area" style="display:none">
   <div class="rk-filter">
-    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันเริ่มต้น</label><input type="date" id="rk7From" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
-    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันสิ้นสุด</label><input type="date" id="rk7To" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
-    <button class="btnf ap" style="background:#d97706" onclick="renderRK7()">🔍 กรอง</button>
+    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันเริ่มต้น (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px"><input type="number" id="rk7FromD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="rk7FromM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="rk7FromY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="hidden" id="rk7From"></div></div>
+    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันสิ้นสุด (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px"><input type="number" id="rk7ToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="rk7ToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="rk7ToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="hidden" id="rk7To"></div></div>
+    <button class="btnf ap" style="background:#d97706" onclick="applyDMY('rk7From');applyDMY('rk7To');renderRK7()">🔍 กรอง</button>
     <button class="btnf" style="background:#e5e7eb;color:#374151" onclick="resetRK7()">↺ รีเซ็ต</button>
   </div>
 </div>
@@ -415,15 +445,15 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 <!-- SC8 FILTER -->
 <div id="sc8Area" style="display:none">
   <div class="t8-filter8">
-    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันเริ่มต้น</label><input type="date" id="t8From" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
-    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันสิ้นสุด</label><input type="date" id="t8To" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;color:var(--txt)"></div>
+    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันเริ่มต้น (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px"><input type="number" id="t8FromD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="t8FromM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="t8FromY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="hidden" id="t8From"></div></div>
+    <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันสิ้นสุด (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px"><input type="number" id="t8ToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="t8ToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="t8ToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="hidden" id="t8To"></div></div>
     <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">แหล่งข้อมูล</label>
       <select id="t8Src" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;min-width:100px">
         <option value="rs">RS (ขาย)</option>
         <option value="bk">BK (จอง)</option>
       </select>
     </div>
-    <button class="btnf ap" style="background:#0891b2" onclick="renderT8()">🔍 กรอง</button>
+    <button class="btnf ap" style="background:#0891b2" onclick="applyDMY('t8From');applyDMY('t8To');renderT8()">🔍 กรอง</button>
     <button class="btnf" style="background:#e5e7eb;color:#374151" onclick="resetT8()">↺ รีเซ็ต</button>
   </div>
 </div>
@@ -840,24 +870,61 @@ function kpiRS(d){
 
 function initTP(){
   const yrs=[...new Set([...BK.map(r=>r[BF.d]?.slice(0,4)),...RS.map(r=>r[RF.d]?.slice(0,4))].filter(Boolean))].sort();
-  setOpts('tpYr',yrs);
+  setOpts('tpFromYr',yrs);
+  setOpts('tpToYr',yrs);
+  // default: เดือนปัจจุบัน
+  const now=new Date();
+  const curMo=now.getMonth()+1, curYr=String(now.getFullYear());
+  if($('tpFromMo'))$('tpFromMo').value=String(curMo);
+  if($('tpToMo'))$('tpToMo').value=String(curMo);
+  if($('tpFromYr')&&yrs.includes(curYr))$('tpFromYr').value=curYr;
+  if($('tpToYr')&&yrs.includes(curYr))$('tpToYr').value=curYr;
+}
+function getTPDateRange(){
+  // แปลงค่า filter เป็น YYYY-MM string เพื่อเปรียบเทียบ
+  const fromMo=String($('tpFromMo')?.value||'1').padStart(2,'0');
+  const fromYr=$('tpFromYr')?.value||'';
+  const toMo=String($('tpToMo')?.value||'12').padStart(2,'0');
+  const toYr=$('tpToYr')?.value||'';
+  const from=fromYr?fromYr+'-'+fromMo:'';
+  const to=toYr?toYr+'-'+toMo:'';
+  return{from,to};
 }
 function getTPBK(){
-  const yr=$('tpYr').value,mo=$('tpMo').value;
-  return BK.filter(r=>{const d=r[BF.d]||'';if(yr&&d.slice(0,4)!==yr)return false;if(mo&&+d.slice(5,7)!==+mo)return false;return true;});
+  const{from,to}=getTPDateRange();
+  return BK.filter(r=>{
+    const d=(r[BF.d]||'').slice(0,7); // YYYY-MM
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    return true;
+  });
 }
 function getTPRS(){
-  const yr=$('tpYr').value,mo=$('tpMo').value;
-  return RS.filter(r=>{const d=r[RF.d]||'';if(yr&&d.slice(0,4)!==yr)return false;if(mo&&+d.slice(5,7)!==+mo)return false;return true;});
+  const{from,to}=getTPDateRange();
+  return RS.filter(r=>{
+    const d=(r[RF.d]||'').slice(0,7);
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    return true;
+  });
 }
 function resetTP(){
-  $('tpYr').value='';$('tpMo').value='';renderTP5();
+  const now=new Date();
+  const curMo=now.getMonth()+1, curYr=String(now.getFullYear());
+  if($('tpFromMo'))$('tpFromMo').value='1';
+  if($('tpToMo'))$('tpToMo').value=String(curMo);
+  if($('tpFromYr'))$('tpFromYr').value=curYr;
+  if($('tpToYr'))$('tpToYr').value=curYr;
+  renderTP5();
 }
 function updateTPBadge(){
   const MO=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const yr=$('tpYr').value,mo=$('tpMo').value,b=$('tpBadge');
-  if(!b)return;
-  b.textContent=(!yr&&!mo)?'ข้อมูลทั้งหมด':'📅 '+(mo?MO[+mo]+' ':'')+(yr?yr:'');
+  const{from,to}=getTPDateRange();
+  const b=$('tpBadge'); if(!b)return;
+  if(!from&&!to){b.textContent='ข้อมูลทั้งหมด';return;}
+  const fYr=from.slice(0,4),fMo=+from.slice(5,7);
+  const tYr=to.slice(0,4),tMo=+to.slice(5,7);
+  b.textContent='📅 '+(fMo?MO[fMo]+' ':'')+fYr+' ถึง '+(tMo?MO[tMo]+' ':'')+tYr;
 }
 
 // ── RENDER DISPATCHER ────────────────────────────────────────────────────────
@@ -1753,19 +1820,48 @@ const TEAM_MAP={
 };
 const BR_NAME={"BN":"บางนา","BS":"บางเสาธง","KS":"เกษตร","SR":"ศรีนครินทร์","FT":"ฝ่ายทดสอบ","HO":"สำนักงานใหญ่"};
 
+// แปลงค่า dd/mm/yyyy input → YYYY-MM-DD ใส่ hidden field
+function applyDMY(id){
+  const d=$( id+'D'), m=$(id+'M'), y=$(id+'Y'), h=$(id);
+  if(!d||!m||!y||!h)return;
+  const dv=String(d.value||'').padStart(2,'0');
+  const mv=String(m.value||'').padStart(2,'0');
+  const yv=y.value||'';
+  if(dv&&mv&&yv) h.value=yv+'-'+mv+'-'+dv;
+  else h.value='';
+}
+// ตั้งค่า dd/mm/yyyy input จาก YYYY-MM-DD
+function setDMY(id, isoDate){
+  if(!isoDate||isoDate.length<10)return;
+  const d=$(id+'D'), m=$(id+'M'), y=$(id+'Y'), h=$(id);
+  if(!d||!m||!y)return;
+  d.value=isoDate.slice(8,10).replace(/^0/,'');
+  m.value=isoDate.slice(5,7).replace(/^0/,'');
+  y.value=isoDate.slice(0,4);
+  if(h)h.value=isoDate;
+}
+
 function initSC6(){
   // Set default date range: first and last date in data
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
   if(allDates.length){
-    $('sc6From').value=allDates[0];
-    $('sc6To').value=allDates[allDates.length-1];
+    // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
+    setDMY('sc6From','2026-01-01');
+    setDMY('sc6To',allDates[allDates.length-1]);
+    applyDMY('sc6From');applyDMY('sc6To');
   }
 }
 function resetSC6(){
+  setDMY('sc6From','2026-01-01');
+  const allDates=[...new Set([...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean))].sort();
+  if(allDates.length) setDMY('sc6To',allDates[allDates.length-1]);
+  applyDMY('sc6From');applyDMY('sc6To');
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
   if(allDates.length){
-    $('sc6From').value=allDates[0];
-    $('sc6To').value=allDates[allDates.length-1];
+    // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
+    setDMY('sc6From','2026-01-01');
+    setDMY('sc6To',allDates[allDates.length-1]);
+    applyDMY('sc6From');applyDMY('sc6To');
   }
   renderSC6();
 }
@@ -1954,7 +2050,14 @@ function renderSC6(){
     });
   }
 
-  $('sc6Body').innerHTML=html;
+  // เพิ่มหมายเหตุก่อนตาราง
+const sc6Note='<div style="background:#fef9c3;border:1.5px solid #fbbf24;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#92400e">⚠️ <b>หมายเหตุ:</b> ข้อมูลการแบ่งทีมเริ่มต้นตั้งแต่ปี 2026 — ข้อมูลก่อนหน้านี้อาจไม่ตรงกับทีมปัจจุบัน</div>';
+const sc6Container=document.getElementById('sc6Body');
+if(sc6Container)sc6Container.innerHTML='';
+const noteEl=document.createElement('div');
+noteEl.innerHTML=sc6Note;
+if(sc6Container)sc6Container.appendChild(noteEl);
+$('sc6Body').innerHTML+=html;
 }
 
 
@@ -1962,15 +2065,19 @@ function initSC6(){
   // Set default date range: first and last date in data
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
   if(allDates.length){
-    $('sc6From').value=allDates[0];
-    $('sc6To').value=allDates[allDates.length-1];
+    // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
+    setDMY('sc6From','2026-01-01');
+    setDMY('sc6To',allDates[allDates.length-1]);
+    applyDMY('sc6From');applyDMY('sc6To');
   }
 }
 function resetSC6(){
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
   if(allDates.length){
-    $('sc6From').value=allDates[0];
-    $('sc6To').value=allDates[allDates.length-1];
+    // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
+    setDMY('sc6From','2026-01-01');
+    setDMY('sc6To',allDates[allDates.length-1]);
+    applyDMY('sc6From');applyDMY('sc6To');
   }
   renderSC6();
 }
@@ -2023,11 +2130,11 @@ function rkSort(tblId, col){
 
 function initRK7(){
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
-  if(allDates.length){$('rk7From').value=allDates[0];$('rk7To').value=allDates[allDates.length-1];}
+  if(allDates.length){setDMY('rk7From',allDates[0]);setDMY('rk7To',allDates[allDates.length-1]);applyDMY('rk7From');applyDMY('rk7To');}
 }
 function resetRK7(){
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
-  if(allDates.length){$('rk7From').value=allDates[0];$('rk7To').value=allDates[allDates.length-1];}
+  if(allDates.length){setDMY('rk7From',allDates[0]);setDMY('rk7To',allDates[allDates.length-1]);applyDMY('rk7From');applyDMY('rk7To');}
   renderRK7();
 }
 function getRK7Data(){
@@ -2170,11 +2277,11 @@ const t8SortState={pup:{col:-1,asc:false},mux:{col:-1,asc:false}};
 
 function initT8(){
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
-  if(allDates.length){$('t8From').value=allDates[0];$('t8To').value=allDates[allDates.length-1];}
+  if(allDates.length){setDMY('t8From',allDates[0]);setDMY('t8To',allDates[allDates.length-1]);applyDMY('t8From');applyDMY('t8To');}
 }
 function resetT8(){
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
-  if(allDates.length){$('t8From').value=allDates[0];$('t8To').value=allDates[allDates.length-1];}
+  if(allDates.length){setDMY('t8From',allDates[0]);setDMY('t8To',allDates[allDates.length-1]);applyDMY('t8From');applyDMY('t8To');}
   $('t8Src').value='rs';
   renderT8();
 }
