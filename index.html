@@ -2819,6 +2819,14 @@ function buildSC10Table(containerId,data,FI,title){
     const mux=d.filter(r=>r[FI.mg]==='MU-X').length;
     return{pup,mux,tot:pup+mux};
   }
+  function pctVal(cur,prev){
+    if(!prev) return cur>0?'+∞%':'0%';
+    const p=((cur-prev)/prev*100).toFixed(0);
+    return(p>0?'+':'')+p+'%';
+  }
+  function pctColor(cur,prev){
+    return cur>=prev?'#16a34a':'#dc2626';
+  }
 
   const curLabel=`${fmtDateShort(from)} - ${fmtDateShort(to)}`;
   const pmLabel =`${fmtDateShort(ranges.prevMo.from)} - ${fmtDateShort(ranges.prevMo.to)}`;
@@ -2831,13 +2839,22 @@ function buildSC10Table(containerId,data,FI,title){
 
   function brRows(br){
     const s=brStat(curData,br),s2=brStat(pmData,br),s3=brStat(pyData,br);
-    const pm_pct=pctChange(s.tot,s2.tot);
-    const py_pct=pctChange(s.tot,s3.tot);
-    const pmColor=s.tot>=s2.tot?'#16a34a':'#dc2626';
-    const pyColor=s.tot>=s3.tot?'#16a34a':'#dc2626';
+    // % Growth column: เดือนก่อน vs เดือนนี้
+    const pm_pct=pctVal(s.tot,s2.tot);
+    const py_pct=pctVal(s.tot,s3.tot);
+    const pmC=pctColor(s.tot,s2.tot);
+    const pyC=pctColor(s.tot,s3.tot);
+    // % เทียบแถว: P-UP, MU-X, Total vs เดือนก่อน
+    const cmp_pup=pctVal(s.pup,s2.pup);
+    const cmp_mux=pctVal(s.mux,s2.mux);
+    const cmp_tot=pctVal(s.tot,s2.tot);
+    const cmpC_pup=pctColor(s.pup,s2.pup);
+    const cmpC_mux=pctColor(s.mux,s2.mux);
+    const cmpC_tot=pctColor(s.tot,s2.tot);
+
     return`
       <tr style="background:#fff;border-bottom:1px solid #e2e8f0">
-        <td style="padding:7px 12px;font-weight:800;color:#1a3a5c;vertical-align:middle" rowspan="3">${br}</td>
+        <td style="padding:7px 12px;font-weight:800;color:#1a3a5c;vertical-align:middle" rowspan="4">${br}</td>
         <td style="padding:7px 12px;font-size:12px;font-weight:700;color:#1e293b">${curLabel}</td>
         <td style="padding:7px 12px;text-align:center;color:#e84c1e;font-weight:800;font-size:14px">${s.pup||'-'}</td>
         <td style="padding:7px 12px;text-align:center;color:#1a3a5c;font-weight:800;font-size:14px">${s.mux||'-'}</td>
@@ -2849,22 +2866,33 @@ function buildSC10Table(containerId,data,FI,title){
         <td style="padding:7px 12px;text-align:center;color:#e84c1e;font-weight:700">${s2.pup||'-'}</td>
         <td style="padding:7px 12px;text-align:center;color:#1a3a5c;font-weight:700">${s2.mux||'-'}</td>
         <td style="padding:7px 12px;text-align:center;font-weight:700">${s2.tot||'-'}</td>
-        <td style="padding:7px 12px;text-align:center;font-weight:800;font-size:14px;color:${pmColor}">${pm_pct}</td>
+        <td style="padding:7px 12px;text-align:center;font-weight:800;font-size:14px;color:${pmC}">${pm_pct}</td>
       </tr>
-      <tr style="background:#fff7ed;border-bottom:2px solid #e2e8f0">
+      <tr style="background:#fff7ed;border-bottom:1px solid #e2e8f0">
         <td style="padding:7px 12px;font-size:12px;font-weight:700;color:#1e293b">${pyLabel}</td>
         <td style="padding:7px 12px;text-align:center;color:#e84c1e;font-weight:700">${s3.pup||'-'}</td>
         <td style="padding:7px 12px;text-align:center;color:#1a3a5c;font-weight:700">${s3.mux||'-'}</td>
         <td style="padding:7px 12px;text-align:center;font-weight:700">${s3.tot||'-'}</td>
-        <td style="padding:7px 12px;text-align:center;font-weight:800;font-size:14px;color:${pyColor}">${py_pct}</td>
+        <td style="padding:7px 12px;text-align:center;font-weight:800;font-size:14px;color:${pyC}">${py_pct}</td>
+      </tr>
+      <tr style="background:#f1f5f9;border-bottom:3px solid #cbd5e1">
+        <td style="padding:5px 12px;font-size:11px;color:#64748b;font-weight:700">% เทียบ ${curLabel} / ${pmLabel}</td>
+        <td style="padding:5px 12px;text-align:center;font-weight:800;font-size:13px;color:${cmpC_pup}">${cmp_pup}</td>
+        <td style="padding:5px 12px;text-align:center;font-weight:800;font-size:13px;color:${cmpC_mux}">${cmp_mux}</td>
+        <td style="padding:5px 12px;text-align:center;font-weight:800;font-size:13px;color:${cmpC_tot}">${cmp_tot}</td>
+        <td style="padding:5px 12px;text-align:center"></td>
       </tr>`;
   }
 
   // IKS total
   const iks=iksStat(curData),iks2=iksStat(pmData),iks3=iksStat(pyData);
-  const iks_pm=pctChange(iks.tot,iks2.tot),iks_py=pctChange(iks.tot,iks3.tot);
+  const iks_pm=pctVal(iks.tot,iks2.tot),iks_py=pctVal(iks.tot,iks3.tot);
   const ikspmC=iks.tot>=iks2.tot?'#6ee7b7':'#fca5a5';
   const ikspyC=iks.tot>=iks3.tot?'#6ee7b7':'#fca5a5';
+  const iksCmpPup=pctVal(iks.pup,iks2.pup),iksCmpMux=pctVal(iks.mux,iks2.mux),iksCmpTot=pctVal(iks.tot,iks2.tot);
+  const iksCmpCPup=iks.pup>=iks2.pup?'#6ee7b7':'#fca5a5';
+  const iksCmpCMux=iks.mux>=iks2.mux?'#6ee7b7':'#fca5a5';
+  const iksCmpCTot=iks.tot>=iks2.tot?'#6ee7b7':'#fca5a5';
 
   const el=$(containerId); if(!el)return;
   el.innerHTML=`
@@ -2888,7 +2916,7 @@ function buildSC10Table(containerId,data,FI,title){
           ${activeBrs.map(br=>brRows(br)).join('')}
           <!-- IKS TOTAL -->
           <tr style="background:#1a3a5c;color:#fff">
-            <td style="padding:8px 12px;font-weight:800;vertical-align:middle" rowspan="3">🏢 IKS</td>
+            <td style="padding:8px 12px;font-weight:800;vertical-align:middle" rowspan="4">🏢 IKS</td>
             <td style="padding:8px 12px;font-size:12px;font-weight:700">${curLabel}</td>
             <td style="padding:8px 12px;text-align:center;font-weight:800">${iks.pup}</td>
             <td style="padding:8px 12px;text-align:center;font-weight:800">${iks.mux}</td>
@@ -2908,6 +2936,13 @@ function buildSC10Table(containerId,data,FI,title){
             <td style="padding:8px 12px;text-align:center">${iks3.mux}</td>
             <td style="padding:8px 12px;text-align:center">${iks3.tot}</td>
             <td style="padding:8px 12px;text-align:center;font-weight:800;font-size:14px;color:${ikspyC}">${iks_py}</td>
+          </tr>
+          <tr style="background:#0f2447;color:#fff">
+            <td style="padding:6px 12px;font-size:11px;font-weight:700">% เทียบ ${curLabel} / ${pmLabel}</td>
+            <td style="padding:6px 12px;text-align:center;font-weight:800;font-size:13px;color:${iksCmpCPup}">${iksCmpPup}</td>
+            <td style="padding:6px 12px;text-align:center;font-weight:800;font-size:13px;color:${iksCmpCMux}">${iksCmpMux}</td>
+            <td style="padding:6px 12px;text-align:center;font-weight:800;font-size:13px;color:${iksCmpCTot}">${iksCmpTot}</td>
+            <td style="padding:6px 12px;text-align:center"></td>
           </tr>
         </tbody>
       </table>
