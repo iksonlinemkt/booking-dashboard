@@ -237,6 +237,8 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 .t8-tbl tr.t8-sum td.t8-pct{color:#cbd5e1;}
 .t8-tbl tr.t8-sum td:first-child{color:#fff;}
 .t8-filter8{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:10px 22px 0;background:var(--card);border-bottom:1px solid var(--border);border-top:3px solid #0891b2;}
+.tab.sc9{border-bottom-color:#6366f1}.tab.sc9.on{color:#6366f1;border-bottom-color:#6366f1}
+.tab.sc10{border-bottom-color:#ea580c}.tab.sc10.on{color:#ea580c;border-bottom-color:#ea580c}
 </style>
 </head>
 <body>
@@ -268,6 +270,9 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
     <div class="tab sc6"  onclick="switchTab(6,this)">📊 ยอดจอง vs ขาย</div>
     <div class="tab sc7"  onclick="switchTab(7,this)">🏅 จัดอันดับ</div>
     <div class="tab sc8" onclick="switchTab(8,this)">📦 ยอดขายรายรุ่น</div>
+  <div class="tab-div"></div>
+  <div class="tab sc9"  onclick="switchTab(9,this)">📊 สรุปยอดรายเดือน</div>
+  <div class="tab sc10" onclick="switchTab(10,this)">📈 เปรียบเทียบยอด</div>
 </div>
 
 <!-- BK FILTER -->
@@ -467,6 +472,58 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
     <div><label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px">วันสิ้นสุด (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px"><input type="number" id="rk7ToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="rk7ToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="number" id="rk7ToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center"><input type="hidden" id="rk7To"></div></div>
     <button class="btnf ap" style="background:#d97706" onclick="applyDMY('rk7From');applyDMY('rk7To');renderRK7()">🔍 กรอง</button>
     <button class="btnf" style="background:#e5e7eb;color:#374151" onclick="resetRK7()">↺ รีเซ็ต</button>
+  </div>
+</div>
+
+<!-- SC9 FILTER -->
+<div id="sc9Area" style="display:none">
+  <div class="fbar" style="background:#f0f7ff;border-bottom:2px solid #bfdbfe;padding:8px 16px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+    <div class="fg"><label>เดือน</label>
+      <select id="sc9Mo" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+        <option value="1">ม.ค.</option><option value="2">ก.พ.</option><option value="3">มี.ค.</option>
+        <option value="4">เม.ย.</option><option value="5">พ.ค.</option><option value="6">มิ.ย.</option>
+        <option value="7">ก.ค.</option><option value="8">ส.ค.</option><option value="9">ก.ย.</option>
+        <option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option>
+      </select>
+    </div>
+    <div class="fg"><label>ปี</label>
+      <select id="sc9Yr" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px"></select>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <button class="btnf ap" onclick="renderSC9()">🔍 กรอง</button>
+      <button class="btnf re" onclick="resetSC9()">↺ รีเซ็ต</button>
+    </div>
+  </div>
+</div>
+
+<!-- SC10 FILTER -->
+<div id="sc10Area" style="display:none">
+  <div class="fbar" style="background:#fff7ed;border-bottom:2px solid #fed7aa;padding:8px 16px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+    <div class="fg"><label>วันเริ่มต้น (วว/ดด/ปปปป)</label>
+      <div style="display:flex;gap:4px">
+        <input type="number" id="sc10FromD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('sc10From')">
+        <span style="color:var(--mut);align-self:center">/</span>
+        <input type="number" id="sc10FromM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('sc10From')">
+        <span style="color:var(--mut);align-self:center">/</span>
+        <input type="number" id="sc10FromY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('sc10From')">
+        <input type="hidden" id="sc10From">
+      </div>
+    </div>
+    <div class="fg"><label>วันสิ้นสุด (วว/ดด/ปปปป)</label>
+      <div style="display:flex;gap:4px">
+        <input type="number" id="sc10ToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('sc10To')">
+        <span style="color:var(--mut);align-self:center">/</span>
+        <input type="number" id="sc10ToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('sc10To')">
+        <span style="color:var(--mut);align-self:center">/</span>
+        <input type="number" id="sc10ToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center" onchange="applyDMY('sc10To')">
+        <input type="hidden" id="sc10To">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <button class="btnf ap" style="background:#ea580c" onclick="applyDMY('sc10From');applyDMY('sc10To');renderSC10()">🔍 กรอง</button>
+      <button class="btnf re" onclick="resetSC10()">↺ รีเซ็ต</button>
+    </div>
+    <span id="sc10Badge" style="font-size:11px;color:#ea580c;font-weight:700;align-self:center"></span>
   </div>
 </div>
 
@@ -711,6 +768,18 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
   </div>
 </div>
 
+<!-- ════════ TAB 9: Monthly Summary ════════ -->
+<div class="page" id="p9">
+  <div id="sc9BK" style="margin-bottom:24px"></div>
+  <div id="sc9RS"></div>
+</div>
+
+<!-- ════════ TAB 10: Compare ════════ -->
+<div class="page" id="p10">
+  <div id="sc10BK" style="margin-bottom:24px"></div>
+  <div id="sc10RS"></div>
+</div>
+
 <script>
 // ── FIELD INDICES ────────────────────────────────────────────────────────────
 // BK: [d,br,sc,mg,tp,oc,pt,cs,st,scc,fi]
@@ -782,13 +851,15 @@ function switchTab(n,el){
   const bk=$('bkArea'),rs=$('rsArea'),tp=$('tpArea'),sc6=$('sc6Area'),sc7=$('sc7Area');
   bk.style.display='none';rs.style.display='none';tp.style.display='none';
   sc6.style.display='none';sc7.style.display='none';
-  const sc8=$('sc8Area');if(sc8)sc8.style.display='none';
+  ['sc8Area','sc9Area','sc10Area'].forEach(id=>{const el=$(id);if(el)el.style.display='none';});
   if(n<=2)      bk.style.display='block';
   else if(n<=4) rs.style.display='block';
   else if(n===5)tp.style.display='block';
   else if(n===6)sc6.style.display='block';
   else if(n===7)sc7.style.display='block';
-  else if(n===8){const sc8=$('sc8Area');if(sc8)sc8.style.display='block';}
+  else if(n===8){const el=$('sc8Area');if(el)el.style.display='block';}
+  else if(n===9){const el=$('sc9Area');if(el)el.style.display='block';}
+  else if(n===10){const el=$('sc10Area');if(el)el.style.display='block';}
 
   render();
 }
@@ -971,6 +1042,8 @@ function render(){
   else if(curTab===6){renderSC6();}
   else if(curTab===7){renderRK7();}
   else if(curTab===8){renderT8();}
+  else if(curTab===9){renderSC9();}
+  else if(curTab===10){applyDMY('sc10From');applyDMY('sc10To');renderSC10();}
 }
 
 // ── CHART HELPERS ────────────────────────────────────────────────────────────
@@ -2376,17 +2449,20 @@ function buildT8Table(tblId, headId, bodyId, data, groups, mg, sortKey){
 
   // Render rows
   const bodyRows = scData.map(s => {
-    const pct = grandTot > 0 ? ((s.tot/grandTot)*100).toFixed(1) : '0';
+    // % รวม = 100% เสมอ (เพราะคิด % จากยอดของตัวเองแล้ว)
     let cells = `<td data-v="${s.sc}">${s.sc}</td>`;
     s.grpCounts.forEach(v => {
+      // % คิดจากยอดรวมของเซลคนนั้น (s.tot)
       const p = s.tot > 0 ? ((v/s.tot)*100).toFixed(1) : '0';
       cells += `<td class="t8-num" data-v="${v}">${v||'-'}</td><td class="t8-pct" data-v="${v}">${v?p+'%':''}</td>`;
     });
     if(showOther){
-      const v = s.otherCount, p = s.tot > 0 ? ((v/s.tot)*100).toFixed(1) : '0';
+      const v = s.otherCount;
+      const p = s.tot > 0 ? ((v/s.tot)*100).toFixed(1) : '0';
       cells += `<td class="t8-num" data-v="${v}" style="color:#94a3b8">${v||'-'}</td><td class="t8-pct" data-v="${v}" style="color:#94a3b8">${v?p+'%':''}</td>`;
     }
-    cells += `<td class="${isTotCol}" data-v="${s.tot}">${s.tot}</td><td class="t8-pct ${isTotCol}" data-v="${pct}">${pct}%</td>`;
+    // คอลัมน์รวม: แสดงจำนวน + 100% (เพราะ % แต่ละรุ่นรวมกันแล้วได้ 100%)
+    cells += `<td class="${isTotCol}" data-v="${s.tot}">${s.tot}</td><td class="t8-pct ${isTotCol}" data-v="100">100%</td>`;
     return `<tr class="t8-data-row">${cells}</tr>`;
   }).join('');
 
@@ -2513,7 +2589,7 @@ async function loadFromGAS() {
     SC_DATA = (data.sc || []).map(r => r.map(v => (v===null||v===undefined)?'':String(v).trim()));
     buildSCIndex();
     showLoading(false);
-    initBK(BK); initRS(RS); initTP(); initSC6(); initRK7(); initT8();
+    initBK(BK); initRS(RS); initTP(); initSC6(); initRK7(); initT8(); initSC9(); initSC10();
     updateDataStatus();
     render();
     toast('✅ โหลดข้อมูลสำเร็จ — BK ' + BK.length + ' รายการ, RS ' + RS.length + ' รายการ');
@@ -2556,6 +2632,276 @@ function resetGasUrl() {
     localStorage.removeItem('iks_gas_url');
     showToastError('❌ GAS URL ถูกล้างแล้ว — กรอก URL ใหม่เพื่อโหลดข้อมูล');
   }
+}
+
+// ── TAB 9: Monthly Summary (BK vs RS) ───────────────────────────────────────
+const BRANCHES=['BN','SR','BS','KS','FT','HO'];
+const BR_TH={'BN':'บางนา','SR':'ศรีนครินทร์','BS':'บางเสาธง','KS':'เกษตร','FT':'Fleet','HO':'HO'};
+const MO_TH=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function initSC9(){
+  const yrs=[...new Set([...BK.map(r=>r[BF.d]?.slice(0,4)),...RS.map(r=>r[RF.d]?.slice(0,4))].filter(Boolean))].sort();
+  const sel=$('sc9Yr'); if(!sel)return;
+  sel.innerHTML=yrs.map(y=>`<option value="${y}">${y}</option>`).join('');
+  const now=new Date();
+  sel.value=String(now.getFullYear());
+  $('sc9Mo').value=String(now.getMonth()+1);
+}
+
+function resetSC9(){
+  initSC9(); renderSC9();
+}
+
+function getSC9Data(data,FI,yr,mo){
+  const ym=`${yr}-${String(mo).padStart(2,'0')}`;
+  return data.filter(r=>(r[FI.d]||'').slice(0,7)===ym);
+}
+
+function buildSC9Table(containerId, data, FI, title){
+  const yr=$('sc9Yr')?.value||''; 
+  const mo=+($('sc9Mo')?.value||0);
+  if(!yr||!mo)return;
+  const rows=getSC9Data(data,FI,yr,mo);
+  const moLabel=`${MO_TH[mo]} ${yr}`;
+
+  const brData=BRANCHES.map(br=>{
+    const bd=rows.filter(r=>(r[FI.br]||'').trim()===br);
+    const pup=bd.filter(r=>r[FI.mg]==='P-UP').length;
+    const mux=bd.filter(r=>r[FI.mg]==='MU-X').length;
+    return{br,pup,mux,tot:pup+mux};
+  }).filter(b=>b.tot>0);
+
+  const totPUP=brData.reduce((s,b)=>s+b.pup,0);
+  const totMUX=brData.reduce((s,b)=>s+b.mux,0);
+  const totAll=totPUP+totMUX;
+
+  const el=$(containerId); if(!el)return;
+  el.innerHTML=`
+    <div style="background:#1a3a5c;color:#fff;border-radius:10px 10px 0 0;padding:10px 18px;font-weight:800;font-size:14px">
+      ${title} — ${moLabel}
+    </div>
+    <div style="overflow-x:auto;border:1.5px solid #e2e8f0;border-radius:0 0 10px 10px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#e8f0fe">
+            <th style="padding:8px 14px;text-align:left;font-weight:800">สาขา</th>
+            <th style="padding:8px 14px;text-align:center;color:#e84c1e;font-weight:800">P-UP</th>
+            <th style="padding:8px 14px;text-align:center;color:#1a3a5c;font-weight:800">MU-X</th>
+            <th style="padding:8px 14px;text-align:center;background:#6366f1;color:#fff;font-weight:800">รวม</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${brData.map((b,i)=>`
+            <tr style="background:${i%2?'#f8fafc':'#fff'};border-bottom:1px solid #e2e8f0">
+              <td style="padding:8px 14px;font-weight:700">${b.br} — ${BR_TH[b.br]||b.br}</td>
+              <td style="padding:8px 14px;text-align:center;color:#e84c1e;font-weight:700">${b.pup||'-'}</td>
+              <td style="padding:8px 14px;text-align:center;color:#1a3a5c;font-weight:700">${b.mux||'-'}</td>
+              <td style="padding:8px 14px;text-align:center;background:#6366f1;color:#fff;font-weight:800">${b.tot}</td>
+            </tr>`).join('')}
+          <tr style="background:#1a3a5c;color:#fff">
+            <td style="padding:8px 14px;font-weight:800">TOTAL</td>
+            <td style="padding:8px 14px;text-align:center;font-weight:800">${totPUP}</td>
+            <td style="padding:8px 14px;text-align:center;font-weight:800">${totMUX}</td>
+            <td style="padding:8px 14px;text-align:center;background:#4f46e5;font-weight:800">${totAll}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderSC9(){
+  buildSC9Table('sc9BK', BK, BF, '📋 BK — ยอดจอง');
+  buildSC9Table('sc9RS', RS, RF, '💰 RS — ยอดขาย');
+}
+
+// ── TAB 10: Compare (เทียบเดือนก่อน + ปีก่อน) ──────────────────────────────
+function initSC10(){
+  const now=new Date();
+  setDMY('sc10From',`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`);
+  const dd=String(now.getDate()).padStart(2,'0');
+  setDMY('sc10To',`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${dd}`);
+  applyDMY('sc10From');applyDMY('sc10To');
+}
+
+function resetSC10(){
+  initSC10(); renderSC10();
+}
+
+function getDateRange(from,to){
+  // from/to = YYYY-MM-DD
+  // prev month: ขยับย้อนหลัง 1 เดือน
+  const f=new Date(from), t=new Date(to);
+  const daysDiff=Math.round((t-f)/(1000*60*60*24));
+  
+  // เดือนก่อน (same day range)
+  const pm_f=new Date(f); pm_f.setMonth(pm_f.getMonth()-1);
+  const pm_t=new Date(t); pm_t.setMonth(pm_t.getMonth()-1);
+  
+  // ปีก่อน (same day range)
+  const py_f=new Date(f); py_f.setFullYear(py_f.getFullYear()-1);
+  const py_t=new Date(t); py_t.setFullYear(py_t.getFullYear()-1);
+  
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return{
+    cur:{from,to},
+    prevMo:{from:fmt(pm_f),to:fmt(pm_t)},
+    prevYr:{from:fmt(py_f),to:fmt(py_t)}
+  };
+}
+
+function filterRange(data,FI,from,to){
+  return data.filter(r=>{
+    const d=(r[FI.d]||'').slice(0,10);
+    return(!from||d>=from)&&(!to||d<=to);
+  });
+}
+
+function fmtDateShort(iso){
+  if(!iso||iso.length<10)return'';
+  const d=new Date(iso+'T00:00:00');
+  return `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
+}
+
+function pctChange(cur,prev){
+  if(!prev) return cur>0?'+∞%':'0%';
+  const p=((cur-prev)/prev*100).toFixed(0);
+  return(p>0?'+':'')+p+'%';
+}
+
+function buildSC10Table(containerId,data,FI,title){
+  const from=$('sc10From').value, to=$('sc10To').value;
+  if(!from||!to)return;
+  const ranges=getDateRange(from,to);
+  
+  const curData=filterRange(data,FI,ranges.cur.from,ranges.cur.to);
+  const pmData =filterRange(data,FI,ranges.prevMo.from,ranges.prevMo.to);
+  const pyData =filterRange(data,FI,ranges.prevYr.from,ranges.prevYr.to);
+
+  function brStat(d,br){
+    const bd=d.filter(r=>(r[FI.br]||'').trim()===br);
+    return{pup:bd.filter(r=>r[FI.mg]==='P-UP').length,mux:bd.filter(r=>r[FI.mg]==='MU-X').length,tot:bd.length};
+  }
+  function iksStat(d){
+    const pup=d.filter(r=>r[FI.mg]==='P-UP').length;
+    const mux=d.filter(r=>r[FI.mg]==='MU-X').length;
+    return{pup,mux,tot:pup+mux};
+  }
+
+  const curLabel=`${fmtDateShort(from)} - ${fmtDateShort(to)}`;
+  const pmLabel =`${fmtDateShort(ranges.prevMo.from)} - ${fmtDateShort(ranges.prevMo.to)}`;
+  const pyLabel =`${fmtDateShort(ranges.prevYr.from)} - ${fmtDateShort(ranges.prevYr.to)}`;
+
+  const activeBrs=BRANCHES.filter(br=>{
+    const s=brStat(curData,br);const s2=brStat(pmData,br);const s3=brStat(pyData,br);
+    return s.tot>0||s2.tot>0||s3.tot>0;
+  });
+
+  function brRows(br){
+    const s=brStat(curData,br),s2=brStat(pmData,br),s3=brStat(pyData,br);
+    const pm_pct=pctChange(s.tot,s2.tot),py_pct=pctChange(s.tot,s3.tot);
+    const pmColor=s.tot>=s2.tot?'#16a34a':'#dc2626';
+    const pyColor=s.tot>=s3.tot?'#16a34a':'#dc2626';
+    return`
+      <tr style="background:#fff;border-bottom:1px solid #e2e8f0">
+        <td style="padding:6px 10px;font-weight:700;color:#1a3a5c" rowspan="3">${br}</td>
+        <td style="padding:6px 10px;font-size:11px;color:#64748b">${curLabel}</td>
+        <td style="padding:6px 10px;text-align:center;color:#e84c1e;font-weight:700">${s.pup||'-'}</td>
+        <td style="padding:6px 10px;text-align:center;color:#1a3a5c;font-weight:700">${s.mux||'-'}</td>
+        <td style="padding:6px 10px;text-align:center;font-weight:800">${s.tot}</td>
+        <td style="padding:6px 10px;text-align:center" rowspan="2"></td>
+      </tr>
+      <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0">
+        <td style="padding:6px 10px;font-size:11px;color:#64748b">${pmLabel}</td>
+        <td style="padding:6px 10px;text-align:center;color:#e84c1e">${s2.pup||'-'}</td>
+        <td style="padding:6px 10px;text-align:center;color:#1a3a5c">${s2.mux||'-'}</td>
+        <td style="padding:6px 10px;text-align:center">${s2.tot||'-'}</td>
+      </tr>
+      <tr style="background:#fff7ed;border-bottom:1px solid #e2e8f0">
+        <td style="padding:6px 10px;font-size:11px;color:#64748b">${pyLabel}</td>
+        <td style="padding:6px 10px;text-align:center;color:#e84c1e">${s3.pup||'-'}</td>
+        <td style="padding:6px 10px;text-align:center;color:#1a3a5c">${s3.mux||'-'}</td>
+        <td style="padding:6px 10px;text-align:center">${s3.tot||'-'}</td>
+        <td style="padding:6px 10px;text-align:center"></td>
+      </tr>
+      <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
+        <td style="padding:4px 10px;font-size:11px;color:#64748b">% เทียบ</td>
+        <td colspan="2" style="padding:4px 10px;font-size:11px;color:#64748b">${pmLabel} / ${pyLabel}</td>
+        <td style="padding:4px 10px;text-align:center;font-size:11px"></td>
+        <td style="padding:4px 10px;text-align:center;font-size:11px"></td>
+        <td style="padding:4px 10px;text-align:center;font-weight:800;font-size:12px;color:${pmColor}">${pm_pct}</td>
+        <td style="padding:4px 10px;text-align:center;font-weight:800;font-size:12px;color:${pyColor}">${py_pct}</td>
+      </tr>`;
+  }
+
+  // IKS total
+  const iks=iksStat(curData),iks2=iksStat(pmData),iks3=iksStat(pyData);
+  const iks_pm=pctChange(iks.tot,iks2.tot),iks_py=pctChange(iks.tot,iks3.tot);
+  const ikspmC=iks.tot>=iks2.tot?'#16a34a':'#dc2626';
+  const ikspyC=iks.tot>=iks3.tot?'#16a34a':'#dc2626';
+
+  const el=$(containerId); if(!el)return;
+  el.innerHTML=`
+    <div style="background:#1a3a5c;color:#fff;border-radius:10px 10px 0 0;padding:10px 18px;font-weight:800;font-size:14px">
+      ${title}
+      <span style="float:right;font-size:12px;font-weight:400;opacity:.8">${curLabel}</span>
+    </div>
+    <div style="overflow-x:auto;border:1.5px solid #e2e8f0;border-radius:0 0 10px 10px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#1e3a8a;color:#fff">
+            <th style="padding:8px 10px;text-align:left">สาขา</th>
+            <th style="padding:8px 10px;text-align:left">ช่วงเวลา</th>
+            <th style="padding:8px 10px;text-align:center;color:#fca5a5">P-UP</th>
+            <th style="padding:8px 10px;text-align:center;color:#93c5fd">MU-X</th>
+            <th style="padding:8px 10px;text-align:center">รวม</th>
+            <th style="padding:8px 10px;text-align:center;background:#0d9488">vs เดือนก่อน</th>
+            <th style="padding:8px 10px;text-align:center;background:#7c3aed">vs ปีก่อน</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${activeBrs.map(br=>brRows(br)).join('')}
+          <!-- IKS TOTAL -->
+          <tr style="background:#1a3a5c;color:#fff">
+            <td style="padding:8px 10px;font-weight:800" rowspan="3">🏢 IKS รวม</td>
+            <td style="padding:8px 10px;font-size:11px">${curLabel}</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:800">${iks.pup}</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:800">${iks.mux}</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:800">${iks.tot}</td>
+            <td rowspan="2"></td>
+          </tr>
+          <tr style="background:#243b6e;color:#fff">
+            <td style="padding:8px 10px;font-size:11px">${pmLabel}</td>
+            <td style="padding:8px 10px;text-align:center">${iks2.pup}</td>
+            <td style="padding:8px 10px;text-align:center">${iks2.mux}</td>
+            <td style="padding:8px 10px;text-align:center">${iks2.tot}</td>
+          </tr>
+          <tr style="background:#1e3559;color:#fff">
+            <td style="padding:8px 10px;font-size:11px">${pyLabel}</td>
+            <td style="padding:8px 10px;text-align:center">${iks3.pup}</td>
+            <td style="padding:8px 10px;text-align:center">${iks3.mux}</td>
+            <td style="padding:8px 10px;text-align:center">${iks3.tot}</td>
+            <td></td>
+          </tr>
+          <tr style="background:#0f2447;color:#fff">
+            <td style="padding:6px 10px;font-size:11px">% เทียบ</td>
+            <td colspan="2" style="padding:6px 10px;font-size:11px">${pmLabel} / ${pyLabel}</td>
+            <td></td><td></td>
+            <td style="padding:6px 10px;text-align:center;font-weight:800;color:${ikspmC==='#16a34a'?'#6ee7b7':'#fca5a5'}">${iks_pm}</td>
+            <td style="padding:6px 10px;text-align:center;font-weight:800;color:${ikspyC==='#16a34a'?'#6ee7b7':'#fca5a5'}">${iks_py}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderSC10(){
+  applyDMY('sc10From');applyDMY('sc10To');
+  buildSC10Table('sc10BK',BK,BF,'📋 BK — เปรียบเทียบยอดจอง');
+  buildSC10Table('sc10RS',RS,RF,'💰 RS — เปรียบเทียบยอดขาย');
+  // update badge
+  const from=$('sc10From').value,to=$('sc10To').value;
+  const b=$('sc10Badge');
+  if(b&&from&&to)b.textContent=`${fmtDateShort(from)} ถึง ${fmtDateShort(to)}`;
 }
 
 // Start — loadFromGAS เพียงครั้งเดียว (render() ถูกเรียกใน loadFromGAS หลังโหลดสำเร็จ)
