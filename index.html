@@ -2805,7 +2805,7 @@ function buildSC10Table(containerId,data,FI,title){
   const from=$('sc10From').value, to=$('sc10To').value;
   if(!from||!to)return;
   const ranges=getDateRange(from,to);
-  
+
   const curData=filterRange(data,FI,ranges.cur.from,ranges.cur.to);
   const pmData =filterRange(data,FI,ranges.prevMo.from,ranges.prevMo.to);
   const pyData =filterRange(data,FI,ranges.prevYr.from,ranges.prevYr.to);
@@ -2825,102 +2825,89 @@ function buildSC10Table(containerId,data,FI,title){
   const pyLabel =`${fmtDateShort(ranges.prevYr.from)} - ${fmtDateShort(ranges.prevYr.to)}`;
 
   const activeBrs=BRANCHES.filter(br=>{
-    const s=brStat(curData,br);const s2=brStat(pmData,br);const s3=brStat(pyData,br);
+    const s=brStat(curData,br),s2=brStat(pmData,br),s3=brStat(pyData,br);
     return s.tot>0||s2.tot>0||s3.tot>0;
   });
 
   function brRows(br){
     const s=brStat(curData,br),s2=brStat(pmData,br),s3=brStat(pyData,br);
-    const pm_pct=pctChange(s.tot,s2.tot),py_pct=pctChange(s.tot,s3.tot);
+    const pm_pct=pctChange(s.tot,s2.tot);
+    const py_pct=pctChange(s.tot,s3.tot);
     const pmColor=s.tot>=s2.tot?'#16a34a':'#dc2626';
     const pyColor=s.tot>=s3.tot?'#16a34a':'#dc2626';
     return`
       <tr style="background:#fff;border-bottom:1px solid #e2e8f0">
-        <td style="padding:6px 10px;font-weight:700;color:#1a3a5c" rowspan="3">${br}</td>
-        <td style="padding:6px 10px;font-size:12px;color:#1e293b;font-weight:700">${curLabel}</td>
-        <td style="padding:6px 10px;text-align:center;color:#e84c1e;font-weight:800;font-size:14px">${s.pup||'-'}</td>
-        <td style="padding:6px 10px;text-align:center;color:#1a3a5c;font-weight:800;font-size:14px">${s.mux||'-'}</td>
-        <td style="padding:6px 10px;text-align:center;font-weight:900;font-size:15px">${s.tot}</td>
-        <td style="padding:6px 10px;text-align:center" rowspan="2"></td>
+        <td style="padding:7px 12px;font-weight:800;color:#1a3a5c;vertical-align:middle" rowspan="3">${br}</td>
+        <td style="padding:7px 12px;font-size:12px;font-weight:700;color:#1e293b">${curLabel}</td>
+        <td style="padding:7px 12px;text-align:center;color:#e84c1e;font-weight:800;font-size:14px">${s.pup||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;color:#1a3a5c;font-weight:800;font-size:14px">${s.mux||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;font-weight:900;font-size:15px">${s.tot}</td>
+        <td style="padding:7px 12px;text-align:center"></td>
       </tr>
       <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0">
-        <td style="padding:6px 10px;font-size:12px;color:#1e293b;font-weight:700">${pmLabel}</td>
-        <td style="padding:6px 10px;text-align:center;color:#e84c1e">${s2.pup||'-'}</td>
-        <td style="padding:6px 10px;text-align:center;color:#1a3a5c">${s2.mux||'-'}</td>
-        <td style="padding:6px 10px;text-align:center">${s2.tot||'-'}</td>
+        <td style="padding:7px 12px;font-size:12px;font-weight:700;color:#1e293b">${pmLabel}</td>
+        <td style="padding:7px 12px;text-align:center;color:#e84c1e;font-weight:700">${s2.pup||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;color:#1a3a5c;font-weight:700">${s2.mux||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;font-weight:700">${s2.tot||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;font-weight:800;font-size:14px;color:${pmColor}">${pm_pct}</td>
       </tr>
-      <tr style="background:#fff7ed;border-bottom:1px solid #e2e8f0">
-        <td style="padding:6px 10px;font-size:12px;color:#1e293b;font-weight:700">${pyLabel}</td>
-        <td style="padding:6px 10px;text-align:center;color:#e84c1e">${s3.pup||'-'}</td>
-        <td style="padding:6px 10px;text-align:center;color:#1a3a5c">${s3.mux||'-'}</td>
-        <td style="padding:6px 10px;text-align:center">${s3.tot||'-'}</td>
-        <td style="padding:6px 10px;text-align:center"></td>
-      </tr>
-      <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
-        <td style="padding:4px 10px;font-size:11px;color:#64748b">% เทียบ</td>
-        <td colspan="2" style="padding:4px 10px;font-size:11px;color:#64748b">${pmLabel} / ${pyLabel}</td>
-        <td style="padding:4px 10px;text-align:center;font-size:11px"></td>
-        <td style="padding:4px 10px;text-align:center;font-size:11px"></td>
-        <td style="padding:4px 10px;text-align:center;font-weight:800;font-size:12px;color:${pmColor}">${pm_pct}</td>
-        <td style="padding:4px 10px;text-align:center;font-weight:800;font-size:12px;color:${pyColor}">${py_pct}</td>
+      <tr style="background:#fff7ed;border-bottom:2px solid #e2e8f0">
+        <td style="padding:7px 12px;font-size:12px;font-weight:700;color:#1e293b">${pyLabel}</td>
+        <td style="padding:7px 12px;text-align:center;color:#e84c1e;font-weight:700">${s3.pup||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;color:#1a3a5c;font-weight:700">${s3.mux||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;font-weight:700">${s3.tot||'-'}</td>
+        <td style="padding:7px 12px;text-align:center;font-weight:800;font-size:14px;color:${pyColor}">${py_pct}</td>
       </tr>`;
   }
 
   // IKS total
   const iks=iksStat(curData),iks2=iksStat(pmData),iks3=iksStat(pyData);
   const iks_pm=pctChange(iks.tot,iks2.tot),iks_py=pctChange(iks.tot,iks3.tot);
-  const ikspmC=iks.tot>=iks2.tot?'#16a34a':'#dc2626';
-  const ikspyC=iks.tot>=iks3.tot?'#16a34a':'#dc2626';
+  const ikspmC=iks.tot>=iks2.tot?'#6ee7b7':'#fca5a5';
+  const ikspyC=iks.tot>=iks3.tot?'#6ee7b7':'#fca5a5';
 
   const el=$(containerId); if(!el)return;
   el.innerHTML=`
-    <div style="background:#1a3a5c;color:#fff;border-radius:10px 10px 0 0;padding:10px 18px;font-weight:800;font-size:14px">
-      ${title}
-      <span style="float:right;font-size:12px;font-weight:400;opacity:.8">${curLabel}</span>
+    <div style="background:#1a3a5c;color:#fff;border-radius:10px 10px 0 0;padding:10px 18px;font-weight:800;font-size:14px;display:flex;justify-content:space-between;align-items:center">
+      <span>${title}</span>
+      <span style="font-size:12px;font-weight:400;opacity:.8">${curLabel}</span>
     </div>
     <div style="overflow-x:auto;border:1.5px solid #e2e8f0;border-radius:0 0 10px 10px">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead>
           <tr style="background:#1e3a8a;color:#fff">
-            <th style="padding:8px 10px;text-align:left">สาขา</th>
-            <th style="padding:8px 10px;text-align:left">ช่วงเวลา</th>
-            <th style="padding:8px 10px;text-align:center;color:#fca5a5">P-UP</th>
-            <th style="padding:8px 10px;text-align:center;color:#93c5fd">MU-X</th>
-            <th style="padding:8px 10px;text-align:center">รวม</th>
-            <th style="padding:8px 10px;text-align:center;background:#0d9488">vs เดือนก่อน</th>
-            <th style="padding:8px 10px;text-align:center;background:#7c3aed">vs ปีก่อน</th>
+            <th style="padding:9px 12px;text-align:left;min-width:60px">สาขา</th>
+            <th style="padding:9px 12px;text-align:left;min-width:180px">ช่วงเวลา</th>
+            <th style="padding:9px 12px;text-align:center;color:#fca5a5">P-UP</th>
+            <th style="padding:9px 12px;text-align:center;color:#93c5fd">MU-X</th>
+            <th style="padding:9px 12px;text-align:center">รวม</th>
+            <th style="padding:9px 12px;text-align:center;background:#0d9488;min-width:90px">% Growth</th>
           </tr>
         </thead>
         <tbody>
           ${activeBrs.map(br=>brRows(br)).join('')}
           <!-- IKS TOTAL -->
           <tr style="background:#1a3a5c;color:#fff">
-            <td style="padding:8px 10px;font-weight:800" rowspan="3">🏢 IKS รวม</td>
-            <td style="padding:8px 10px;font-size:11px">${curLabel}</td>
-            <td style="padding:8px 10px;text-align:center;font-weight:800">${iks.pup}</td>
-            <td style="padding:8px 10px;text-align:center;font-weight:800">${iks.mux}</td>
-            <td style="padding:8px 10px;text-align:center;font-weight:800">${iks.tot}</td>
-            <td rowspan="2"></td>
+            <td style="padding:8px 12px;font-weight:800;vertical-align:middle" rowspan="3">🏢 IKS</td>
+            <td style="padding:8px 12px;font-size:12px;font-weight:700">${curLabel}</td>
+            <td style="padding:8px 12px;text-align:center;font-weight:800">${iks.pup}</td>
+            <td style="padding:8px 12px;text-align:center;font-weight:800">${iks.mux}</td>
+            <td style="padding:8px 12px;text-align:center;font-weight:800">${iks.tot}</td>
+            <td style="padding:8px 12px;text-align:center"></td>
           </tr>
           <tr style="background:#243b6e;color:#fff">
-            <td style="padding:8px 10px;font-size:11px">${pmLabel}</td>
-            <td style="padding:8px 10px;text-align:center">${iks2.pup}</td>
-            <td style="padding:8px 10px;text-align:center">${iks2.mux}</td>
-            <td style="padding:8px 10px;text-align:center">${iks2.tot}</td>
+            <td style="padding:8px 12px;font-size:12px;font-weight:700">${pmLabel}</td>
+            <td style="padding:8px 12px;text-align:center">${iks2.pup}</td>
+            <td style="padding:8px 12px;text-align:center">${iks2.mux}</td>
+            <td style="padding:8px 12px;text-align:center">${iks2.tot}</td>
+            <td style="padding:8px 12px;text-align:center;font-weight:800;font-size:14px;color:${ikspmC}">${iks_pm}</td>
           </tr>
           <tr style="background:#1e3559;color:#fff">
-            <td style="padding:8px 10px;font-size:11px">${pyLabel}</td>
-            <td style="padding:8px 10px;text-align:center">${iks3.pup}</td>
-            <td style="padding:8px 10px;text-align:center">${iks3.mux}</td>
-            <td style="padding:8px 10px;text-align:center">${iks3.tot}</td>
-            <td></td>
-          </tr>
-          <tr style="background:#0f2447;color:#fff">
-            <td style="padding:6px 10px;font-size:11px">% เทียบ</td>
-            <td colspan="2" style="padding:6px 10px;font-size:11px">${pmLabel} / ${pyLabel}</td>
-            <td></td><td></td>
-            <td style="padding:6px 10px;text-align:center;font-weight:800;color:${ikspmC==='#16a34a'?'#6ee7b7':'#fca5a5'}">${iks_pm}</td>
-            <td style="padding:6px 10px;text-align:center;font-weight:800;color:${ikspyC==='#16a34a'?'#6ee7b7':'#fca5a5'}">${iks_py}</td>
+            <td style="padding:8px 12px;font-size:12px;font-weight:700">${pyLabel}</td>
+            <td style="padding:8px 12px;text-align:center">${iks3.pup}</td>
+            <td style="padding:8px 12px;text-align:center">${iks3.mux}</td>
+            <td style="padding:8px 12px;text-align:center">${iks3.tot}</td>
+            <td style="padding:8px 12px;text-align:center;font-weight:800;font-size:14px;color:${ikspyC}">${iks_py}</td>
           </tr>
         </tbody>
       </table>
