@@ -2681,16 +2681,9 @@ function downloadImage(elId,filename){
     }
   });
 
-  // 2) การ์ด KPI: จัดใหม่เป็นไอคอนอยู่บน ข้อความอยู่กลาง (แนวตั้ง) ตามรูปแบบรายงาน
-  clone.querySelectorAll('.kpi-card').forEach(card=>{
-    card.style.flexDirection='column';
-    card.style.alignItems='center';
-    card.style.justifyContent='center';
-    card.style.textAlign='center';
-    card.style.gap='8px';
-    card.style.padding='16px 10px';
-  });
-  clone.querySelectorAll('.kpi-text').forEach(t=>{t.style.textAlign='center';});
+  // 2) สลับไปใช้ชุดสรุป KPI แบบย่อ 4 การ์ด (เฉพาะตอนดาวน์โหลด) ถ้ามี — เช่น Tab 9
+  clone.querySelectorAll('.kpi-live-only').forEach(elx=>{elx.style.display='none';});
+  clone.querySelectorAll('.kpi-download-only').forEach(elx=>{elx.style.display='block';});
 
   clone.querySelectorAll('table').forEach(tbl=>{
     tbl.style.width='auto';
@@ -2706,6 +2699,22 @@ function downloadImage(elId,filename){
     if(wrap){wrap.style.display='inline-block';wrap.style.overflow='visible';wrap.style.width='auto';}
     const card=wrap&&wrap.parentElement;
     if(card){card.style.display='inline-block';card.style.width='auto';}
+  });
+
+  // 3) แถว KPI: หุ้มพอดีตัวเป็นแถวเดียว ไม่ยืดเต็มความกว้าง ให้กว้างสอดคล้องกับตารางด้านล่าง
+  clone.querySelectorAll('.kpi-row').forEach(row=>{
+    row.style.display='inline-flex';
+    row.style.width='auto';
+    row.style.flexWrap='nowrap';
+  });
+  clone.querySelectorAll('.kpi-card').forEach(card=>{
+    card.style.flex='0 0 auto';
+  });
+
+  // 4) กรอบรายงานทั้งหมดหุ้มพอดีตัว (ไม่ยืดเต็มความกว้างหน้าจอ)
+  clone.querySelectorAll('.dl-shrink').forEach(wrapx=>{
+    wrapx.style.display='inline-block';
+    wrapx.style.width='auto';
   });
 
   document.body.appendChild(clone);
@@ -2833,7 +2842,7 @@ function buildSC9Table(containerId, bkData, rsData){
 
   const el=$(containerId); if(!el)return;
   el.innerHTML=`
-    <div style="padding:16px 22px 0">
+    <div class="dl-shrink" style="padding:16px 22px 0">
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px">
         <div style="flex:0 1 100px;height:2px;background:linear-gradient(90deg,transparent,#1a3a5c);position:relative">
           <div style="position:absolute;right:0;top:-6px;width:0;height:0;border-style:solid;border-width:0 0 14px 14px;border-color:transparent transparent #1a3a5c transparent"></div>
@@ -2844,28 +2853,40 @@ function buildSC9Table(containerId, bkData, rsData){
         </div>
       </div>
 
-      <div style="display:flex;justify-content:center;margin-bottom:18px">
-        <div style="max-width:260px;width:100%">
-          ${kpiCard('🏢','linear-gradient(135deg,#1a3a5c,#3a5f8c)','สาขาทั้งหมด',activeBrs.length,'สาขา')}
+      <div class="kpi-live-only">
+        <div style="display:flex;justify-content:center;margin-bottom:18px">
+          <div style="max-width:260px;width:100%">
+            ${kpiCard('🏢','linear-gradient(135deg,#1a3a5c,#3a5f8c)','สาขาทั้งหมด',activeBrs.length,'สาขา')}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;margin-bottom:20px">
+          <div>
+            <div style="background:#1a3a5c;color:#fff;display:inline-block;padding:6px 16px;border-radius:20px;font-weight:800;font-size:12.5px;margin-bottom:10px">📋 ฝั่งจอง (Booking)</div>
+            <div class="kpi-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+              ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','จอง P-UP',bkTot.pup,'คัน')}
+              ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','จอง MU-X',bkTot.mux,'คัน')}
+              ${kpiCard('📋','linear-gradient(135deg,#1a3a5c,#3a5f8c)','ยอดจองรวม',bkTot.tot,'คัน')}
+            </div>
+          </div>
+          <div>
+            <div style="background:#16533a;color:#fff;display:inline-block;padding:6px 16px;border-radius:20px;font-weight:800;font-size:12.5px;margin-bottom:10px">💰 ฝั่งขาย (Sales)</div>
+            <div class="kpi-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+              ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','ขาย P-UP',rsTot.pup,'คัน')}
+              ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','ขาย MU-X',rsTot.mux,'คัน')}
+              ${kpiCard('💰','linear-gradient(135deg,#16533a,#27ae60)','ยอดขายรวม',rsTot.tot,'คัน')}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;margin-bottom:20px">
-        <div>
-          <div style="background:#1a3a5c;color:#fff;display:inline-block;padding:6px 16px;border-radius:20px;font-weight:800;font-size:12.5px;margin-bottom:10px">📋 ฝั่งจอง (Booking)</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-            ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','จอง P-UP',bkTot.pup,'คัน')}
-            ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','จอง MU-X',bkTot.mux,'คัน')}
-            ${kpiCard('📋','linear-gradient(135deg,#1a3a5c,#3a5f8c)','ยอดจองรวม',bkTot.tot,'คัน')}
-          </div>
-        </div>
-        <div>
-          <div style="background:#16533a;color:#fff;display:inline-block;padding:6px 16px;border-radius:20px;font-weight:800;font-size:12.5px;margin-bottom:10px">💰 ฝั่งขาย (Sales)</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-            ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','ขาย P-UP',rsTot.pup,'คัน')}
-            ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','ขาย MU-X',rsTot.mux,'คัน')}
-            ${kpiCard('💰','linear-gradient(135deg,#16533a,#27ae60)','ยอดขายรวม',rsTot.tot,'คัน')}
-          </div>
+      <!-- เวอร์ชันสำหรับดาวน์โหลดเท่านั้น (4 การ์ดสรุปรวม แนวนอน) -->
+      <div class="kpi-download-only" style="display:none">
+        <div class="kpi-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px">
+          ${kpiCard('🏢','linear-gradient(135deg,#1a3a5c,#3a5f8c)','สาขาทั้งหมด',activeBrs.length,'สาขา')}
+          ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','ยอดรวม BK (Pick up)',bkTot.pup,'คัน')}
+          ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','ยอดรวม MU-X',bkTot.mux,'คัน')}
+          ${kpiCard('📊','linear-gradient(135deg,#1a3a5c,#16a34a)','ยอดรวมทั้งหมด',grandTot,'คัน')}
         </div>
       </div>
 
@@ -3038,8 +3059,8 @@ function buildSC10Table(containerId,data,FI,title,accentColor){
 
   const el=$(containerId); if(!el)return;
   el.innerHTML=`
-    <div style="padding:6px 0 0">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px">
+    <div class="dl-shrink" style="padding:6px 0 0">
+      <div class="kpi-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px">
         ${kpiCard('🏢',`linear-gradient(135deg,${ac},#3a5f8c)`,'สาขาทั้งหมด',activeBrs.length,'สาขา')}
         ${kpiCard('🛻',`linear-gradient(135deg,${ac},#3a5f8c)`,'ยอดรวม P-UP',iks.pup,'คัน')}
         ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#16533a)','ยอดรวม MU-X',iks.mux,'คัน')}
