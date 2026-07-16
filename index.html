@@ -2652,85 +2652,79 @@ function kpiCard(icon,grad,label,val,sub,valColor){
 }
 
 function downloadImage(elId,filename){
-  const src=$(elId);
-  if(!src){alert('ไม่พบข้อมูลสำหรับดาวน์โหลด');return;}
+  const el=$(elId);
+  if(!el){alert('ไม่พบข้อมูลสำหรับดาวน์โหลด');return;}
   if(typeof html2canvas==='undefined'){alert('ไม่สามารถโหลดไลบรารีสร้างรูปภาพได้');return;}
 
-  // โคลนไปวางนอกจอ แล้วปรับความกว้างคอลัมน์ให้พอดีกับข้อความ (เฉพาะตอนสร้างรูป ไม่กระทบหน้าจอจริง)
-  const clone=src.cloneNode(true);
-  clone.style.position='absolute';
-  clone.style.left='-99999px';
-  clone.style.top='0';
-  clone.style.background='#ffffff';
-  clone.style.padding='14px';
-  clone.style.width='max-content';
-
-  // 1) ตัวอักษรหนาและใหญ่ขึ้นเล็กน้อย ให้ชัดเจนขึ้นเวลาพิมพ์/ส่งรายงาน
-  clone.querySelectorAll('[style]').forEach(elx=>{
-    const s=elx.style;
-    if(s.fontWeight){
-      const fw=parseInt(s.fontWeight)||400;
-      s.fontWeight=String(Math.min(900,fw+150));
-    }
-    if(s.fontSize){
-      const m=/([\d.]+)px/.exec(s.fontSize);
-      if(m){
-        const nv=Math.round(parseFloat(m[1])*1.1*10)/10;
-        s.fontSize=nv+'px';
-      }
-    }
-  });
-
-  // 2) สลับไปใช้ชุดสรุป KPI แบบย่อ 4 การ์ด (เฉพาะตอนดาวน์โหลด) ถ้ามี — เช่น Tab 9
-  clone.querySelectorAll('.kpi-live-only').forEach(elx=>{elx.style.display='none';});
-  clone.querySelectorAll('.kpi-download-only').forEach(elx=>{elx.style.display='block';});
-
-  clone.querySelectorAll('table').forEach(tbl=>{
-    tbl.style.width='auto';
-    tbl.style.minWidth='0';
-    tbl.style.tableLayout='auto';
-    tbl.querySelectorAll('th,td').forEach(cell=>{
-      cell.style.width='';
-      cell.style.minWidth='';
-      cell.style.whiteSpace='nowrap';
+  // เก็บ style เดิมของ element จริงทั้งหมดไว้ก่อน (จะปรับชั่วคราวเพื่อ capture แล้วคืนค่ากลับทันทีหลังเสร็จ)
+  const nodes=[el,...el.querySelectorAll('*')];
+  const saved=nodes.map(n=>n.getAttribute('style'));
+  function restore(){
+    nodes.forEach((n,i)=>{
+      if(saved[i]===null)n.removeAttribute('style');
+      else n.setAttribute('style',saved[i]);
     });
-    // ให้กรอบตารางและการ์ดหุ้มพอดีตัว แทนที่จะยืดเต็มความกว้าง container
-    const wrap=tbl.parentElement;
-    if(wrap){wrap.style.display='inline-block';wrap.style.overflow='visible';wrap.style.width='auto';}
-    const card=wrap&&wrap.parentElement;
-    if(card){card.style.display='inline-block';card.style.width='auto';}
-  });
+  }
 
-  // 3) แถว KPI: หุ้มพอดีตัวเป็นแถวเดียว ไม่ยืดเต็มความกว้าง ให้กว้างสอดคล้องกับตารางด้านล่าง
-  clone.querySelectorAll('.kpi-row').forEach(row=>{
-    row.style.display='inline-flex';
-    row.style.width='auto';
-    row.style.flexWrap='nowrap';
-  });
-  clone.querySelectorAll('.kpi-card').forEach(card=>{
-    card.style.flex='0 0 auto';
-  });
+  try{
+    // 1) ตัวอักษรหนาและใหญ่ขึ้นเล็กน้อย ให้ชัดเจนขึ้นเวลาพิมพ์/ส่งรายงาน
+    nodes.forEach(elx=>{
+      const s=elx.style;
+      if(s.fontWeight){
+        const fw=parseInt(s.fontWeight)||400;
+        s.fontWeight=String(Math.min(900,fw+150));
+      }
+      if(s.fontSize){
+        const m=/([\d.]+)px/.exec(s.fontSize);
+        if(m){
+          const nv=Math.round(parseFloat(m[1])*1.1*10)/10;
+          s.fontSize=nv+'px';
+        }
+      }
+    });
 
-  // 4) กรอบรายงานทั้งหมดหุ้มพอดีตัว (ไม่ยืดเต็มความกว้างหน้าจอ)
-  clone.querySelectorAll('.dl-shrink').forEach(wrapx=>{
-    wrapx.style.display='inline-block';
-    wrapx.style.width='auto';
-  });
+    // 2) สลับไปใช้ชุดสรุป KPI แบบย่อ (เฉพาะ Tab 9 ที่มีคลาสนี้ — Tab 10 ไม่มีผล)
+    el.querySelectorAll('.kpi-live-only').forEach(elx=>{elx.style.display='none';});
+    el.querySelectorAll('.kpi-download-only').forEach(elx=>{elx.style.display='block';});
 
-  document.body.appendChild(clone);
+    // 3) ตาราง: ให้ความกว้างคอลัมน์พอดีกับข้อความ แทนที่จะยืดเต็ม container
+    el.querySelectorAll('table').forEach(tbl=>{
+      tbl.style.width='auto';
+      tbl.style.minWidth='0';
+      tbl.style.tableLayout='auto';
+      tbl.querySelectorAll('th,td').forEach(cell=>{
+        cell.style.width='';
+        cell.style.minWidth='';
+        cell.style.whiteSpace='nowrap';
+      });
+      const wrap=tbl.parentElement;
+      if(wrap){wrap.style.display='inline-block';wrap.style.overflow='visible';wrap.style.width='auto';}
+      // หมายเหตุ: ใช้ความกว้างพิกเซลตายตัวที่วัดได้จริง (ไม่ใช่ display:inline-block/width:auto)
+      // เพราะ html2canvas เรนเดอร์ตารางที่มี rowspan ผิดพลาด (ว่างเปล่า) เมื่อการ์ดแม่เป็น inline-block
+      const card=wrap&&wrap.parentElement;
+      if(card&&wrap){
+        const measured=wrap.getBoundingClientRect().width;
+        card.style.width=Math.ceil(measured)+'px';
+      }
+    });
 
-  html2canvas(clone,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(canvas=>{
-    document.body.removeChild(clone);
-    const link=document.createElement('a');
-    const ts=new Date().toISOString().slice(0,10);
-    link.download=`${filename}_${ts}.png`;
-    link.href=canvas.toDataURL('image/png');
-    link.click();
-  }).catch(err=>{
-    if(clone.parentNode)document.body.removeChild(clone);
+    html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(canvas=>{
+      restore();
+      const link=document.createElement('a');
+      const ts=new Date().toISOString().slice(0,10);
+      link.download=`${filename}_${ts}.png`;
+      link.href=canvas.toDataURL('image/png');
+      link.click();
+    }).catch(err=>{
+      restore();
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการสร้างรูปภาพ');
+    });
+  }catch(err){
+    restore();
     console.error(err);
     alert('เกิดข้อผิดพลาดในการสร้างรูปภาพ');
-  });
+  }
 }
 
 // ── TAB 9: Monthly Summary (BK vs RS) ───────────────────────────────────────
@@ -3012,9 +3006,9 @@ function buildSC10Table(containerId,data,FI,title,accentColor){
     return`
       <tr style="background:${rowBg};border-bottom:1px solid #e2e8f0">
         <td style="padding:7px 9px;vertical-align:middle" rowspan="4">
-          <span style="display:flex;align-items:center;gap:6px">
-            <span style="background:${ac};color:#fff;font-size:10px;font-weight:800;padding:3px 6px;border-radius:5px;flex-shrink:0">${br}</span>
-            <span style="font-weight:700;color:#1e2a3a;font-size:11.5px;line-height:1.2">${BR_NAME[br]||br}</span>
+          <span style="line-height:1.3">
+            <span style="background:${ac};color:#fff;font-size:10px;font-weight:800;padding:3px 6px;border-radius:5px;display:inline-block">${br}</span><br>
+            <span style="font-weight:700;color:#1e2a3a;font-size:11.5px">${BR_NAME[br]||br}</span>
           </span>
         </td>
         <td style="padding:6px 9px;font-size:11.5px;font-weight:700;color:#1e293b">${curLabel}</td>
@@ -3090,9 +3084,9 @@ function buildSC10Table(containerId,data,FI,title,accentColor){
             <!-- IKS TOTAL -->
             <tr style="background:${shades[0]};color:#fff">
               <td style="padding:7px 9px;vertical-align:middle" rowspan="4">
-                <span style="display:flex;align-items:center;gap:6px">
-                  <span style="background:rgba(255,255,255,.18);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">🏢</span>
-                  <span style="line-height:1.2"><b style="font-size:12px">IKS</b><br><span style="font-size:9.5px;opacity:.8">รวมทุกสาขา</span></span>
+                <span style="line-height:1.3">
+                  <span style="background:rgba(255,255,255,.18);width:22px;height:22px;border-radius:50%;text-align:center;font-size:11px;display:inline-block">🏢</span><br>
+                  <b style="font-size:12px">IKS</b><br><span style="font-size:9.5px;opacity:.8">รวมทุกสาขา</span>
                 </span>
               </td>
               <td style="padding:6px 9px;font-size:11.5px;font-weight:700">${curLabel}</td>
