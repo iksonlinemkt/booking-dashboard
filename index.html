@@ -2710,30 +2710,74 @@ function downloadImage(elId,filename){
       }
     });
 
-    // 4) ให้แถวสรุป KPI ด้านบนกว้างเท่ากับตารางด้านล่าง (รวมทุกการ์ดตาราง+ช่องว่างระหว่างกัน)
-    //    แล้วกระจายการ์ด KPI ให้เต็มความกว้างนั้นพอดี ตามตำแหน่งในภาพตัวอย่าง
+    // 4) ให้แถวสรุป KPI ด้านบนกับตารางด้านล่าง ใช้ความกว้างเดียวกัน (เอาค่าที่กว้างกว่าเป็นหลัก กันล้น/ถูกตัด)
+    //    แล้วจัดกึ่งกลางทั้งคู่ภายในความกว้างนั้น ตามตำแหน่งในภาพตัวอย่าง
     if(cardEls.length){
       const GAP=20;
       const widths=cardEls.map(c=>c.getBoundingClientRect().width);
-      const totalW=widths.reduce((s,w,i)=>s+w+(i>0?GAP:0),0);
+      const totalW_tables=widths.reduce((s,w,i)=>s+w+(i>0?GAP:0),0);
+
+      // วัดความกว้างธรรมชาติของแถว KPI ที่มองเห็นอยู่ (ก่อนบังคับความกว้างใดๆ) โดยลองปรับเป็น inline-flex ชั่วคราว
+      let totalW_kpi=0;
+      const visibleRows=Array.from(el.querySelectorAll('.kpi-row')).filter(row=>row.offsetParent!==null);
+      visibleRows.forEach(row=>{
+        row.style.display='inline-flex';
+        row.style.flexWrap='nowrap';
+        row.style.width='auto';
+        row.style.gap='16px';
+        Array.from(row.children).forEach(c=>{c.style.flex='0 0 auto';});
+        const w=row.getBoundingClientRect().width;
+        if(w>totalW_kpi)totalW_kpi=w;
+      });
+
+      const totalW=Math.ceil(Math.max(totalW_tables,totalW_kpi));
+
       if(cardEls.length>1){
         const grid=cardEls[0].parentElement;
         if(grid){
           // กำหนดความกว้างแต่ละคอลัมน์ตรงๆ แทนการพึ่ง auto-fit/minmax (ซึ่งจะยุบเป็น 1 คอลัมน์ถ้ากว้างรวมแคบกว่า minmax ที่ตั้งไว้)
-          grid.style.display='grid';
-          grid.style.gridTemplateColumns=widths.map(w=>Math.ceil(w)+'px').join(' ');
-          grid.style.width=Math.ceil(totalW)+'px';
+          grid.style.display='flex';
+          grid.style.justifyContent='center';
+          grid.style.gap=GAP+'px';
+          grid.style.width=totalW+'px';
+          cardEls.forEach(c=>{c.style.flex='0 0 auto';});
         }
       }
-      el.querySelectorAll('.kpi-row').forEach(row=>{
-        if(row.offsetParent===null)return; // ข้ามแถวที่ถูกซ่อนอยู่ (เช่น kpi-live-only ตอนดาวน์โหลด)
+      visibleRows.forEach(row=>{
         row.style.display='flex';
-        row.style.flexWrap='nowrap';
-        row.style.justifyContent='space-between';
-        row.style.width=Math.ceil(totalW)+'px';
-        row.style.gap='0';
-        Array.from(row.children).forEach(c=>{c.style.flex='0 0 auto';});
+        row.style.justifyContent='center';
+        row.style.width=totalW+'px';
+        row.style.maxWidth='none';
+        row.style.margin='0 auto 16px';
       });
+
+      // จำกัดกรอบเนื้อหาด้านนอกสุดให้แคบเท่าความกว้างจริง (ไม่ใช่ inline-block/auto)
+      // เพื่อให้ส่วนที่จัดกึ่งกลาง (เช่น แถบชื่อเดือน) อ้างอิงความกว้างที่ถูกต้อง ไม่ยืดตามหน้าเดิม
+      const shrinkWrap=el.querySelector('.dl-shrink');
+      if(shrinkWrap){
+        const swCs=getComputedStyle(shrinkWrap);
+        const padL=parseFloat(swCs.paddingLeft)||0;
+        const padR=parseFloat(swCs.paddingRight)||0;
+        shrinkWrap.style.width=Math.ceil(totalW+padL+padR)+'px'; // border-box: บวก padding เดิมกลับเข้าไป ไม่ให้เนื้อที่ในแคบลง
+      }
+    }
+
+    // 5) ตัดพื้นที่ว่างส่วนเกินออก ให้ขนาดรูปเท่ากับเนื้อหาจริง (ไม่มีที่ว่างขวา/ล่าง)
+    {
+      const elRect=el.getBoundingClientRect();
+      let maxRight=elRect.left, maxBottom=elRect.top;
+      el.querySelectorAll('*').forEach(child=>{
+        if(getComputedStyle(child).display==='none')return;
+        const r=child.getBoundingClientRect();
+        if(r.width<=0||r.height<=0)return;
+        if(r.right>maxRight)maxRight=r.right;
+        if(r.bottom>maxBottom)maxBottom=r.bottom;
+      });
+      const finalW=Math.ceil(maxRight-elRect.left)+8;
+      const finalH=Math.ceil(maxBottom-elRect.top)+8;
+      el.style.width=finalW+'px';
+      el.style.height=finalH+'px';
+      el.style.overflow='hidden';
     }
 
     html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(canvas=>{
