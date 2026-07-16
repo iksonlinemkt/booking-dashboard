@@ -2742,6 +2742,10 @@ function downloadImage(elId,filename){
           grid.style.width=totalW+'px';
           cardEls.forEach(c=>{c.style.flex='0 0 auto';});
         }
+      }else if(cardEls.length===1){
+        // มีตารางเดียว (เช่น Tab 10 BK/RS แยกดาวน์โหลด) — จัดกึ่งกลางตัวการ์ดเองภายในความกว้างรวม
+        cardEls[0].style.margin='0 auto';
+        cardEls[0].style.display='block';
       }
       visibleRows.forEach(row=>{
         row.style.display='flex';
