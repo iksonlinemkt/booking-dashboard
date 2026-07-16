@@ -2652,16 +2652,46 @@ function kpiCard(icon,grad,label,val,sub,valColor){
 }
 
 function downloadImage(elId,filename){
-  const el=$(elId);
-  if(!el){alert('ไม่พบข้อมูลสำหรับดาวน์โหลด');return;}
+  const src=$(elId);
+  if(!src){alert('ไม่พบข้อมูลสำหรับดาวน์โหลด');return;}
   if(typeof html2canvas==='undefined'){alert('ไม่สามารถโหลดไลบรารีสร้างรูปภาพได้');return;}
-  html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(canvas=>{
+
+  // โคลนไปวางนอกจอ แล้วปรับความกว้างคอลัมน์ให้พอดีกับข้อความ (เฉพาะตอนสร้างรูป ไม่กระทบหน้าจอจริง)
+  const clone=src.cloneNode(true);
+  clone.style.position='absolute';
+  clone.style.left='-99999px';
+  clone.style.top='0';
+  clone.style.background='#ffffff';
+  clone.style.padding='14px';
+  clone.style.width='max-content';
+
+  clone.querySelectorAll('table').forEach(tbl=>{
+    tbl.style.width='auto';
+    tbl.style.minWidth='0';
+    tbl.style.tableLayout='auto';
+    tbl.querySelectorAll('th,td').forEach(cell=>{
+      cell.style.width='';
+      cell.style.minWidth='';
+      cell.style.whiteSpace='nowrap';
+    });
+    // ให้กรอบตารางและการ์ดหุ้มพอดีตัว แทนที่จะยืดเต็มความกว้าง container
+    const wrap=tbl.parentElement;
+    if(wrap){wrap.style.display='inline-block';wrap.style.overflow='visible';wrap.style.width='auto';}
+    const card=wrap&&wrap.parentElement;
+    if(card){card.style.display='inline-block';card.style.width='auto';}
+  });
+
+  document.body.appendChild(clone);
+
+  html2canvas(clone,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(canvas=>{
+    document.body.removeChild(clone);
     const link=document.createElement('a');
     const ts=new Date().toISOString().slice(0,10);
     link.download=`${filename}_${ts}.png`;
     link.href=canvas.toDataURL('image/png');
     link.click();
   }).catch(err=>{
+    if(clone.parentNode)document.body.removeChild(clone);
     console.error(err);
     alert('เกิดข้อผิดพลาดในการสร้างรูปภาพ');
   });
@@ -2787,11 +2817,29 @@ function buildSC9Table(containerId, bkData, rsData){
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px">
-        ${kpiCard('🏢','linear-gradient(135deg,#1a3a5c,#3a5f8c)','สาขาทั้งหมด',activeBrs.length,'สาขา')}
-        ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','ยอดรวม BK (Pick up)',bkTot.pup,'คัน')}
-        ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','ยอดรวม MU-X',bkTot.mux,'คัน')}
-        ${kpiCard('📊','linear-gradient(135deg,#1a3a5c,#16a34a)','ยอดรวมทั้งหมด',grandTot,'คัน')}
+      <div style="display:flex;justify-content:center;margin-bottom:18px">
+        <div style="max-width:260px;width:100%">
+          ${kpiCard('🏢','linear-gradient(135deg,#1a3a5c,#3a5f8c)','สาขาทั้งหมด',activeBrs.length,'สาขา')}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;margin-bottom:20px">
+        <div>
+          <div style="background:#1a3a5c;color:#fff;display:inline-block;padding:6px 16px;border-radius:20px;font-weight:800;font-size:12.5px;margin-bottom:10px">📋 ฝั่งจอง (Booking)</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','จอง P-UP',bkTot.pup,'คัน')}
+            ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','จอง MU-X',bkTot.mux,'คัน')}
+            ${kpiCard('📋','linear-gradient(135deg,#1a3a5c,#3a5f8c)','ยอดจองรวม',bkTot.tot,'คัน')}
+          </div>
+        </div>
+        <div>
+          <div style="background:#16533a;color:#fff;display:inline-block;padding:6px 16px;border-radius:20px;font-weight:800;font-size:12.5px;margin-bottom:10px">💰 ฝั่งขาย (Sales)</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            ${kpiCard('🛻','linear-gradient(135deg,#e84c1e,#ff8f5c)','ขาย P-UP',rsTot.pup,'คัน')}
+            ${kpiCard('🚙','linear-gradient(135deg,#0077b6,#48cae4)','ขาย MU-X',rsTot.mux,'คัน')}
+            ${kpiCard('💰','linear-gradient(135deg,#16533a,#27ae60)','ยอดขายรวม',rsTot.tot,'คัน')}
+          </div>
+        </div>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px;padding-bottom:24px">
