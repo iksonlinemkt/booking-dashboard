@@ -86,13 +86,23 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--t
 .pdet{padding:14px 22px 28px;}
 .sh{font-size:14px;font-weight:800;color:var(--pri);padding:5px 0 11px;border-bottom:2px solid var(--border);margin-bottom:16px;}
 .sh.rs{color:var(--rspri);border-color:var(--rsacc);}
-.bcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:28px;}
+.bcgrid{margin-bottom:10px;}
 .bcc{background:var(--card);border-radius:10px;padding:15px;box-shadow:0 1px 5px rgba(0,0,0,.07);border-top:3px solid var(--blu);}
 .bcc.rs{border-top-color:var(--rsacc);}
 .bcn{font-size:13px;font-weight:800;margin-bottom:3px;}
 .bcs{font-size:11px;color:var(--mut);margin-bottom:9px;display:flex;gap:9px;}
 .bcs .mx{color:#1a3a5c;font-weight:700;}.bcs .pp{color:#e84c1e;font-weight:700;}
 .bcw{position:relative;height:140px;}
+.bc-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.bc-branches{display:flex;gap:6px;flex-wrap:wrap;}
+.bcbtn{padding:5px 15px;border-radius:20px;border:1.5px solid var(--border);font-size:12.5px;font-weight:700;cursor:pointer;background:#fff;color:var(--mut);}
+.bcbtn.on{color:#fff;background:var(--blu);border-color:var(--blu);}
+.bcbtn.on.rs{background:var(--rsacc);border-color:var(--rsacc);}
+.bc-summary{font-size:12.5px;color:var(--mut);font-weight:700;}
+.bc-summary .mx{color:#1a3a5c;}
+.bc-summary .pp{color:#e84c1e;}
+.bc-chart-wrap{position:relative;height:400px;background:var(--card);border-radius:10px;padding:16px 14px 8px;box-shadow:0 1px 5px rgba(0,0,0,.07);margin-bottom:28px;}
+.bc-cmp-badge{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e;}
 .bblk{margin-bottom:24px;}
 .bblkt{font-size:13px;font-weight:800;color:#fff;background:var(--pri);padding:8px 15px;border-radius:7px 7px 0 0;}
 .bblkt.rs{background:var(--rspri);}
@@ -274,6 +284,34 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
   <div class="tab-div"></div>
   <div class="tab sc9"  onclick="switchTab(9,this)">📊 สรุปยอดรายเดือน</div>
   <div class="tab sc10" onclick="switchTab(10,this)">📈 เปรียบเทียบยอด</div>
+</div>
+
+<!-- MASTER FILTER — ตั้งค่าครั้งเดียว มีผลกับทุกแท็บ -->
+<div id="masterArea" class="fbar" style="background:#eef2ff;border-bottom:3px solid #4f46e5;padding:10px 16px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+  <div style="font-size:12.5px;font-weight:800;color:#4338ca;align-self:center;white-space:nowrap">🌐 Filter ทุกหน้า:</div>
+  <div class="fg"><label>วันเริ่มต้น (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px;align-items:center">
+      <input type="number" id="mstFromD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+      <span style="color:var(--mut)">/</span>
+      <input type="number" id="mstFromM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+      <span style="color:var(--mut)">/</span>
+      <input type="number" id="mstFromY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+      <input type="hidden" id="mstFrom">
+    </div></div>
+  <div class="fg"><label>วันสิ้นสุด (วว/ดด/ปปปป)</label><div style="display:flex;gap:4px;align-items:center">
+      <input type="number" id="mstToD" min="1" max="31" placeholder="วว" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+      <span style="color:var(--mut)">/</span>
+      <input type="number" id="mstToM" min="1" max="12" placeholder="ดด" style="width:46px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+      <span style="color:var(--mut)">/</span>
+      <input type="number" id="mstToY" min="2020" max="2099" placeholder="ปปปป" style="width:68px;padding:6px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;text-align:center">
+      <input type="hidden" id="mstTo">
+    </div></div>
+  <div class="fg"><label>สาขา</label><select id="mstBr"></select></div>
+  <div class="fg"><label>SC</label><select id="mstSC"></select></div>
+  <div style="display:flex;gap:8px;align-items:flex-end;">
+    <button class="btnf ap" style="background:#4f46e5" onclick="applyMasterFilter()">🔍 กรองทุกหน้า</button>
+    <button class="btnf re" onclick="resetMasterFilter()">↺ รีเซ็ตทุกหน้า</button>
+  </div>
+  <span style="font-size:11px;color:#6366f1;align-self:center">ตั้งค่าที่นี่ครั้งเดียว จะมีผลกับทุกแท็บโดยอัตโนมัติ</span>
 </div>
 
 <!-- BK FILTER -->
@@ -792,7 +830,7 @@ const BF={d:0,br:1,sc:2,mg:3,tp:4,oc:5,pt:6,cs:7,st:8,cd:9,fi:10};
 //      0  1  2  3  4  5  6  7  8
 const RF={d:0,br:1,sc:2,mg:3,tp:4,cu:5,bt:6,so:7,fi:8};
 
-const BK_FI_MAP={"TIL": "ตรีเพชรลิสซิ่ง (TIL)", "SCB": "ธ.ไทยพาณิชย์ (SCB)", "TTB": "ธ.ทหารไทยธนชาต (TTB)", "BAY": "ธ.กรุงศรีอยุธยา (BAY)", "KTL": "กสิกรลิสซิ่ง (KTL)", "ICBC": "ลิสซิ่งไอซีบีซี (ICBC)"};
+const BK_FI_MAP={"TIL": "ตรีเพชรลิสซิ่ง (TIL)", "SCB": "ธ.ไทยพาณิชย์ (SCB)", "SCBL": "ธ.ไทยพาณิชย์ (SCB)", "TTB": "ธ.ทหารไทยธนชาต (TTB)", "BAY": "ธ.กรุงศรีอยุธยา (BAY)", "KTL": "กสิกรลิสซิ่ง (KTL)", "ICBC": "ลิสซิ่งไอซีบีซี (ICBC)"};
 const MTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const PAL=['#1a3a5c','#e84c1e','#1db87a','#f5a623','#7b5ea7','#3a86ff','#f72585','#8ac926','#00b4d8','#ff9f1c','#6c757d','#e9c46a','#264653','#e76f51','#2a9d8f'];
 
@@ -873,6 +911,68 @@ function setOpts(id,vals){
   s.innerHTML='<option value="">ทั้งหมด</option>'+vals.map(v=>`<option>${v}</option>`).join('');
   if([...s.options].some(o=>o.value===c))s.value=c;
 }
+
+// ── MASTER FILTER (ควบคุมทุกแท็บพร้อมกัน) ────────────────────────────────────
+function initMasterFilter(){
+  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
+  if(allDates.length && !$('mstFrom').value){
+    setDMY('mstFrom',allDates[0]);
+    setDMY('mstTo',allDates[allDates.length-1]);
+  }
+  const brs=[...new Set([...BK.map(r=>r[BF.br]),...RS.map(r=>r[RF.br])].filter(Boolean))].sort();
+  const scs=[...new Set([...BK.map(r=>r[BF.sc]),...RS.map(r=>r[RF.sc])].filter(Boolean))].sort();
+  setOpts('mstBr',brs);
+  setOpts('mstSC',scs);
+}
+
+function applyMasterFilter(){
+  applyDMY('mstFrom'); applyDMY('mstTo');
+  const from=$('mstFrom').value, to=$('mstTo').value;
+  const br=$('mstBr').value, sc=$('mstSC').value;
+  if(!from||!to){ toast('❌ กรุณาระบุวันเริ่มต้นและวันสิ้นสุดให้ครบ',false); return; }
+
+  // sync ช่วงวันที่ไปทุกแท็บที่ใช้ตัวกรองแบบ วว/ดด/ปปปป
+  ['bk','rs','sc6','rk7','t8','sc10'].forEach(pfx=>{
+    setDMY(pfx+'From',from); setDMY(pfx+'To',to);
+    applyDMY(pfx+'From'); applyDMY(pfx+'To');
+  });
+
+  // สาขา/SC — มีเฉพาะแท็บจอง(BK) และ ขาย(RS)
+  if($('bkBr')) $('bkBr').value=br;
+  if($('bkSC')) $('bkSC').value=sc;
+  if($('rsBr')) $('rsBr').value=br;
+  if($('rsSC')) $('rsSC').value=sc;
+
+  // Top Performer — ใช้เดือน/ปีต้น-ปลาย จากช่วงวันที่
+  const fromDt=new Date(from), toDt=new Date(to);
+  if($('tpFromMo')){
+    $('tpFromMo').value=String(fromDt.getMonth()+1);
+    const fy=String(fromDt.getFullYear());
+    if([...$('tpFromYr').options].some(o=>o.value===fy)) $('tpFromYr').value=fy;
+    $('tpToMo').value=String(toDt.getMonth()+1);
+    const ty=String(toDt.getFullYear());
+    if([...$('tpToYr').options].some(o=>o.value===ty)) $('tpToYr').value=ty;
+  }
+
+  // สรุปยอดรายเดือน (เดือนเดียว) — ใช้เดือน/ปีของวันที่ "สิ้นสุด" เป็นเดือนที่แสดง
+  if($('sc9Mo')){
+    $('sc9Mo').value=String(toDt.getMonth()+1);
+    const ty=String(toDt.getFullYear());
+    if([...$('sc9Yr').options].some(o=>o.value===ty)) $('sc9Yr').value=ty;
+  }
+
+  // รีเฟรชแท็บที่กำลังเปิดอยู่ทันที — แท็บอื่นจะใช้ค่าที่ตั้งใหม่นี้โดยอัตโนมัติเมื่อสลับไปดู
+  render();
+  toast('✅ ตั้งค่า Filter ทุกหน้าเรียบร้อย');
+}
+
+function resetMasterFilter(){
+  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
+  if(allDates.length){setDMY('mstFrom',allDates[0]);setDMY('mstTo',allDates[allDates.length-1]);}
+  $('mstBr').value=''; $('mstSC').value='';
+  applyMasterFilter();
+}
+
 function initBK(data){
   const dates=data.map(r=>r[BF.d]).filter(Boolean).sort();
   // ตั้งค่าวันที่เฉพาะครั้งแรก (ไม่ override ค่าที่ผู้ใช้ตั้งไว้)
@@ -1241,33 +1341,57 @@ function applyBKCmp(){
   const type=$('bkCmpType').value;
   const n=Math.max(1,parseInt($('bkCmpN').value)||3);
   if(!type) return;
-  bkCmpActive=true;
   const d=getBK();
   const labels=Array.from({length:n},(_,i)=>cmpLabel(type,null,i,n));
   $('bkCmpLabel').textContent=`แสดง: ${labels.join(' / ')}`;
-  renderBK1Cmp(d,type,n);
+  if(curTab===2){
+    // แท็บ "จอง — ความสม่ำเสมอ": เปรียบเทียบกราฟรายวันของสาขาที่เลือกอยู่ (เส้นซ้อนตามช่วงเวลา)
+    bk2Cmp={type,n};
+    renderBranchChart('bcGrid','bcBK',d,BF,false);
+  }else{
+    // แท็บ "จอง — Overview" (ค่าเริ่มต้น)
+    bkCmpActive=true;
+    renderBK1Cmp(d,type,n);
+  }
 }
 function resetBKCmp(){
   bkCmpActive=false;
+  bk2Cmp=null;
   $('bkCmpLabel').textContent='';
   const d=getBK();
-  kpiBK(d); renderBK1(d);
+  if(curTab===2){
+    renderBranchChart('bcGrid','bcBK',d,BF,false);
+  }else{
+    kpiBK(d); renderBK1(d);
+  }
 }
 function applyRSCmp(){
   const type=$('rsCmpType').value;
   const n=Math.max(1,parseInt($('rsCmpN').value)||3);
   if(!type) return;
-  rsCmpActive=true;
   const d=getRS();
   const labels=Array.from({length:n},(_,i)=>cmpLabel(type,null,i,n));
   $('rsCmpLabel').textContent=`แสดง: ${labels.join(' / ')}`;
-  renderRS3Cmp(d,type,n);
+  if(curTab===4){
+    // แท็บ "ขาย — ความสม่ำเสมอ": เปรียบเทียบกราฟรายวันของสาขาที่เลือกอยู่ (เส้นซ้อนตามช่วงเวลา)
+    rs4Cmp={type,n};
+    renderBranchChart('rsBcGrid','bcRS',d,RF,true);
+  }else{
+    // แท็บ "ขาย — Overview" (ค่าเริ่มต้น)
+    rsCmpActive=true;
+    renderRS3Cmp(d,type,n);
+  }
 }
 function resetRSCmp(){
   rsCmpActive=false;
+  rs4Cmp=null;
   $('rsCmpLabel').textContent='';
   const d=getRS();
-  kpiRS(d); renderRS3(d);
+  if(curTab===4){
+    renderBranchChart('rsBcGrid','bcRS',d,RF,true);
+  }else{
+    kpiRS(d); renderRS3(d);
+  }
 }
 
 // กราฟ 100% stacked เปรียบเทียบช่วงเวลา + datalabels % ค้าง
@@ -1475,7 +1599,7 @@ function setBK2Mode(mode){
 }
 function renderBK2(d){
   dPfx('bcBK');dPfx('scBK');
-  buildBranchCharts('bcGrid','bcBK',d,BF,false);
+  renderBranchChart('bcGrid','bcBK',d,BF,false);
   buildSCTable('scSec','scBK',d,BF,false,bk2Mode);
 }
 
@@ -1512,7 +1636,7 @@ function renderRS3(d){
   dC('rFin');
   // whitelist เฉพาะ finance institution จริง ๆ
   const FI_MAP={
-    'TIL':'ตรีเพชรลิสซิ่ง (TIL)','SCB':'ธ.ไทยพาณิชย์ (SCB)',
+    'TIL':'ตรีเพชรลิสซิ่ง (TIL)','SCB':'ธ.ไทยพาณิชย์ (SCB)','SCBL':'ธ.ไทยพาณิชย์ (SCB)',
     'TTB':'ธ.ทหารไทยธนชาต (TTB)','BAY':'ธ.กรุงศรีอยุธยา (BAY)',
     'KTL':'กสิกรลิสซิ่ง (KTL)','ICBC':'ลิสซิ่งไอซีบีซี (ICBC)','CIBC':'ลิสซิ่งไอซีบีซี (ICBC)',
     'บริษัท ตรีเพชรอีซูซุลิสซิ่ง จำกัด':'ตรีเพชรลิสซิ่ง (TIL)',
@@ -1565,41 +1689,124 @@ function setRS4Mode(mode){
 }
 function renderRS4(d){
   dPfx('bcRS');dPfx('scRS');
-  buildBranchCharts('rsBcGrid','bcRS',d,RF,true);
+  renderBranchChart('rsBcGrid','bcRS',d,RF,true);
   buildSCTable('rsSCSec','scRS',d,RF,true,rs4Mode);
 }
 
-// ── BRANCH CHARTS (Tab 2/4) ──────────────────────────────────────────────────
-function buildBranchCharts(gridId,pfx,data,FI,isRS){
-  const grid=$(gridId);grid.innerHTML='';
+// ── BRANCH CHART (Tab 2/4) — กราฟเส้นเดียว เต็มความกว้าง + ปุ่มเลือกสาขา ──────
+var bkBrSel='', rsBrSel='';   // สาขาที่เลือกดูอยู่ ('' = ทุกสาขารวมกัน)
+var bk2Cmp=null, rs4Cmp=null; // สถานะเปรียบเทียบของแท็บนี้: null หรือ {type,n}
+
+function periodStartDate(type, idx, n){
+  const now=new Date();
+  if(type==='month'){
+    const offset=n-1-idx;
+    return new Date(now.getFullYear(),now.getMonth()-offset,1);
+  }
+  if(type==='quarter'){
+    const curQ=Math.floor(now.getMonth()/3),curY=now.getFullYear();
+    const offset=n-1-idx;
+    let q=curQ-offset,y=curY;
+    while(q<0){q+=4;y--;}
+    return new Date(y,q*3,1);
+  }
+  if(type==='year'){
+    return new Date(now.getFullYear()-(n-1-idx),0,1);
+  }
+  return now;
+}
+
+function renderBranchChart(gridId,pfx,data,FI,isRS){
+  const grid=$(gridId); if(!grid)return;
   const brs=[...new Set(data.map(r=>r[FI.br]).filter(Boolean))].sort();
-  const dates=[...new Set(data.map(r=>r[FI.d]).filter(Boolean))].sort();
-  brs.forEach(br=>{
-    const bd=data.filter(r=>r[FI.br]===br);
-    const mxT=bd.filter(r=>r[FI.mg]==='MU-X').length;
-    const ppT=bd.filter(r=>r[FI.mg]==='P-UP').length;
-    const cid=pfx+'_'+br;
-    const card=document.createElement('div');
-    card.className='bcc'+(isRS?' rs':'');
-    card.innerHTML=`<div class="bcn">${isRS?'💰':'🏢'} สาขา ${br}</div><div class="bcs">รวม <b>${mxT+ppT}</b>&nbsp;|&nbsp;<span class="mx">MU-X: ${mxT}</span>&nbsp;|&nbsp;<span class="pp">P-UP: ${ppT}</span></div><div class="bcw"><canvas id="${cid}"></canvas></div>`;
-    grid.appendChild(card);
-    const mxD={},ppD={};dates.forEach(d=>{mxD[d]=0;ppD[d]=0;});
-    bd.forEach(r=>{const d=r[FI.d];if(!d||!dates.includes(d))return;if(r[FI.mg]==='MU-X')mxD[d]++;else if(r[FI.mg]==='P-UP')ppD[d]++;});
-    const lbls=dates.map(d=>{const dt=new Date(d);return `${dt.getDate()}/${dt.getMonth()+1}`;});
-    CH[cid]=new Chart(document.getElementById(cid).getContext('2d'),{
-      type:'bar',
-      data:{labels:lbls,datasets:[
-        {label:'MU-X',data:dates.map(d=>mxD[d]),backgroundColor:'#1a3a5cbb',borderColor:'#1a3a5c',borderWidth:1,borderRadius:2,stack:'s'},
-        {label:'P-UP',data:dates.map(d=>ppD[d]),backgroundColor:'#e84c1ebb',borderColor:'#e84c1e',borderWidth:1,borderRadius:2,stack:'s'},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{
-          legend:{display:false},
-          tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}},
-          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,color:'#fff',font:{size:8,weight:'bold'},formatter:v=>v>0?v:'',anchor:'center',align:'center'}
-        },
-        scales:{x:{stacked:true,ticks:{font:{size:9},maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},grid:{color:'#eee'}}}}
+  let sel = isRS?rsBrSel:bkBrSel;
+  if(sel && !brs.includes(sel)) sel='';
+  if(isRS) rsBrSel=sel; else bkBrSel=sel;
+  const cmp = isRS?rs4Cmp:bk2Cmp;
+
+  const bd = sel ? data.filter(r=>r[FI.br]===sel) : data;
+  const mxT=bd.filter(r=>r[FI.mg]==='MU-X').length;
+  const ppT=bd.filter(r=>r[FI.mg]==='P-UP').length;
+
+  const btnHTML = ['<button class="bcbtn'+(isRS?' rs':'')+(!sel?' on':'')+'" data-br="" onclick="selectBranchChart(\''+gridId+'\',\''+pfx+'\',this)">ทั้งหมด</button>']
+    .concat(brs.map(br=>`<button class="bcbtn${isRS?' rs':''}${sel===br?' on':''}" data-br="${br}" onclick="selectBranchChart('${gridId}','${pfx}',this)">${br}</button>`))
+    .join('');
+
+  const cmpBadge = cmp ? `<span class="bc-cmp-badge">📊 เปรียบเทียบ: ${cmpModeLabel(cmp.type)} ย้อนหลัง ${cmp.n} ช่วง</span>` : '';
+
+  grid.innerHTML=`
+    <div class="bc-toolbar">
+      <div class="bc-branches">${btnHTML}</div>
+      <div class="bc-summary">${isRS?'💰':'🏢'} ${sel?('สาขา '+sel):'ทุกสาขารวมกัน'} — รวม <b>${mxT+ppT}</b> &nbsp;|&nbsp; <span class="mx">MU-X: ${mxT}</span> &nbsp;|&nbsp; <span class="pp">P-UP: ${ppT}</span>${cmpBadge}</div>
+    </div>
+    <div class="bc-chart-wrap"><canvas id="${pfx}_daily"></canvas></div>`;
+
+  drawDailyLineChart(pfx+'_daily', bd, FI, isRS, cmp);
+}
+
+function cmpModeLabel(t){return t==='month'?'เดือน':t==='quarter'?'ไตรมาส':t==='year'?'ปี':t;}
+
+function selectBranchChart(gridId,pfx,btnEl){
+  const isRS = pfx==='bcRS';
+  const br = btnEl.getAttribute('data-br')||'';
+  if(isRS) rsBrSel=br; else bkBrSel=br;
+  if(isRS) renderBranchChart(gridId,pfx,getRS(),RF,true);
+  else     renderBranchChart(gridId,pfx,getBK(),BF,false);
+}
+
+function drawDailyLineChart(canvasId, data, FI, isRS, cmp){
+  dC(canvasId);
+  const cvs=document.getElementById(canvasId); if(!cvs)return;
+  const ctx=cvs.getContext('2d');
+  let labels, datasets;
+
+  if(cmp){
+    const {type,n}=cmp;
+    const maxDay=({month:31,quarter:92,year:366})[type]||31;
+    labels=Array.from({length:maxDay},(_,i)=>String(i+1));
+    const CMP_PAL=isRS?['#166534','#16a34a','#22c55e','#4ade80','#86efac','#bbf7d0']:['#1a3a5c','#2563eb','#0ea5e9','#06b6d4','#0d9488','#059669'];
+    const periods=Array.from({length:n},(_,i)=>filterByPeriod(data,FI,type,i,n));
+    const starts=Array.from({length:n},(_,i)=>periodStartDate(type,i,n));
+    datasets=periods.map((p,i)=>{
+      const cnt=new Array(maxDay).fill(0);
+      p.forEach(r=>{
+        if(!r[FI.d])return;
+        const dt=new Date(r[FI.d]);
+        const idx=Math.floor((dt-starts[i])/86400000);
+        if(idx>=0&&idx<maxDay)cnt[idx]++;
+      });
+      return{
+        label:cmpLabel(type,null,i,n),data:cnt,
+        borderColor:CMP_PAL[i%CMP_PAL.length],backgroundColor:CMP_PAL[i%CMP_PAL.length]+'22',
+        borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.3,fill:false
+      };
     });
+  }else{
+    const dates=[...new Set(data.map(r=>r[FI.d]).filter(Boolean))].sort();
+    labels=dates.map(d=>{const dt=new Date(d);return `${dt.getDate()}/${dt.getMonth()+1}`;});
+    const mxD={},ppD={};dates.forEach(d=>{mxD[d]=0;ppD[d]=0;});
+    data.forEach(r=>{const d=r[FI.d];if(!d||!dates.includes(d))return;if(r[FI.mg]==='MU-X')mxD[d]++;else if(r[FI.mg]==='P-UP')ppD[d]++;});
+    datasets=[
+      {label:'MU-X',data:dates.map(d=>mxD[d]),borderColor:'#1a3a5c',backgroundColor:'#1a3a5c22',borderWidth:2,pointRadius:2,pointHoverRadius:5,tension:.3,fill:true},
+      {label:'P-UP',data:dates.map(d=>ppD[d]),borderColor:'#e84c1e',backgroundColor:'#e84c1e22',borderWidth:2,pointRadius:2,pointHoverRadius:5,tension:.3,fill:true},
+    ];
+  }
+
+  CH[canvasId]=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11.5},boxWidth:14,padding:12}},
+        tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} คัน`}}
+      },
+      scales:{
+        x:{ticks:{font:{size:10.5},maxRotation:0,autoSkip:true,maxTicksLimit:cmp?16:20},grid:{display:false}},
+        y:{beginAtZero:true,ticks:{font:{size:10.5},precision:0},grid:{color:'#eee'}}
+      }
+    }
   });
 }
 
@@ -1889,7 +2096,7 @@ function handleImport(ev,type){
           const fi=String(g(r,'finance')).trim();
           return[fmtDate(g(r,'date')),String(g(r,'branch')).trim(),String(g(r,'sc_name')).replace(/\xa0/g,' ').trim().replace(/ {2,}/g,' '),mg,tp,String(g(r,'occupation')).trim(),String(g(r,'purchase_type')).trim(),String(g(r,'contact_source')).trim(),String(g(r,'status')).trim(),String(g(r,'sc_code')).trim(),fi==='None'?'':fi];
         });
-        initBK(BK);initTP();initSC6();initRK7();initT8();render();
+        initBK(BK);initTP();initSC6();initRK7();initT8();initMasterFilter();render();
         updateDataStatus();
         toast('✅ Booking (Excel): โหลด '+BK.length+' รายการ');
       }else{
@@ -1902,7 +2109,7 @@ function handleImport(ev,type){
           const mc=String(g(r,'model_code')).trim();const mi=mm[mc]||{g:'',t:''};
           return[fmtDate(g(r,'date')),String(g(r,'branch')).trim(),String(g(r,'sc_name')).replace(/\xa0/g,' ').trim().replace(/ {2,}/g,' '),mi.g,mi.t,String(g(r,'customer')).trim(),String(g(r,'bill_to')).trim(),String(g(r,'so_no')).trim(),String(g(r,'finance')).trim()];
         });
-        initRS(RS);initTP();initSC6();initRK7();initT8();render();
+        initRS(RS);initTP();initSC6();initRK7();initT8();initMasterFilter();render();
         updateDataStatus();
         toast('✅ RS (Excel): โหลด '+RS.length+' รายการ');
       }
@@ -1949,41 +2156,6 @@ function setDMY(id, isoDate){
   m.value=isoDate.slice(5,7).replace(/^0/,'');
   y.value=isoDate.slice(0,4);
   if(h)h.value=isoDate;
-}
-
-function initSC6(){
-  // Set default date range: first and last date in data
-  const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
-  if(allDates.length){
-    // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
-    setDMY('sc6From','2026-01-01');
-    setDMY('sc6To',allDates[allDates.length-1]);
-    applyDMY('sc6From');applyDMY('sc6To');
-  }
-}
-function resetSC6(){
-  // default เริ่มต้น 2026-01-01 (ข้อมูลทีมเริ่มต้น 2026)
-  setDMY('sc6From','2026-01-01');
-  const allDates=[...new Set([...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean))].sort();
-  if(allDates.length) setDMY('sc6To',allDates[allDates.length-1]);
-  applyDMY('sc6From');applyDMY('sc6To');
-  renderSC6();
-}
-function getSC6Data(){
-  const from=$('sc6From').value, to=$('sc6To').value;
-  const bk=BK.filter(r=>{
-    const d=r[BF.d]||'';
-    if(from&&d<from)return false;
-    if(to&&d>to)return false;
-    return true;
-  });
-  const rs=RS.filter(r=>{
-    const d=r[RF.d]||'';
-    if(from&&d<from)return false;
-    if(to&&d>to)return false;
-    return true;
-  });
-  return{bk,rs};
 }
 
 function renderSC6(){
@@ -2206,6 +2378,7 @@ function getSC6Data(){
 
 function rkRankCls(i){return i===0?'gold':i===1?'silver':i===2?'bronze':'';}
 
+const rkSortState={}; // เก็บสถานะการเรียงลำดับของแต่ละตารางในแท็บ "จัดอันดับ" (เดิมไม่ได้ประกาศตัวแปรนี้ ทำให้แท็บนี้ error ทุกครั้งที่แสดงผล)
 function rkSort(tblId, col){
   const st=rkSortState[tblId]||{col:-1,asc:true};
   const asc=(st.col===col)?!st.asc:false;
@@ -2419,6 +2592,7 @@ function buildT8Table(tblId, headId, bodyId, data, groups, mg, sortKey){
   };
 
   // คำนวณ scData ก่อนทุกอย่าง
+  const unmatchedTypes={}; // เก็บ type ดิบที่จับคู่ไม่ได้ เพื่อช่วยวินิจฉัย
   const scData = scs.map(sc => {
     const scRows = rows_data.filter(r => r.sc === sc);
     const grpCounts = groups.map(() => 0);
@@ -2426,10 +2600,21 @@ function buildT8Table(tblId, headId, bodyId, data, groups, mg, sortKey){
     scRows.forEach(r => {
       const gi = matchGroup(r.tp, groups);
       if(gi >= 0) grpCounts[gi]++;
-      else otherCount++;
+      else{
+        otherCount++;
+        const key=r.tp||'(ว่างเปล่า)';
+        unmatchedTypes[key]=(unmatchedTypes[key]||0)+1;
+      }
     });
     return {sc, grpCounts, otherCount, tot: scRows.length};
   }).filter(s => s.tot > 0).sort((a,b) => b.tot - a.tot);
+
+  // แสดงรายการ type ที่จับคู่ไม่ได้ใน console เพื่อช่วยตรวจสอบ (ไม่กระทบการแสดงผลตาราง)
+  if(Object.keys(unmatchedTypes).length){
+    const sorted=Object.entries(unmatchedTypes).sort((a,b)=>b[1]-a[1]);
+    console.warn(`[Tab8:${sortKey}] พบค่า Type ที่ไม่ตรงกับ whitelist (ถูกจัดเป็น "อื่นๆ"):`,
+      sorted.map(([t,n])=>`${t} (${n} รายการ)`).join(', '));
+  }
 
   // totals
   const colTots  = groups.map((_,gi) => scData.reduce((s,s2) => s + s2.grpCounts[gi], 0));
@@ -2441,7 +2626,11 @@ function buildT8Table(tblId, headId, bodyId, data, groups, mg, sortKey){
   const otherColIdx = groups.length + 1;
   let hdr = `<tr><th onclick="t8Sort('${tblId}','${sortKey}',0)">SC</th>`;
   groups.forEach((g,i) => { hdr += `<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${i+1})">${g.label}</th>`; });
-  if(showOther) hdr += `<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${otherColIdx})" style="color:#94a3b8">อื่นๆ</th>`;
+  if(showOther){
+    const sorted=Object.entries(unmatchedTypes).sort((a,b)=>b[1]-a[1]);
+    const tip=sorted.map(([t,n])=>`${t}: ${n}`).join('\n');
+    hdr += `<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${otherColIdx})" style="color:#94a3b8;cursor:help" title="ค่า Type ที่ไม่ตรงกับที่รู้จัก (คลิกหัวข้อเพื่อเรียงลำดับ) — ชี้ค้างเพื่อดูรายละเอียด:\n${tip}">อื่นๆ ⓘ</th>`;
+  }
   hdr += `<th colspan="2" onclick="t8Sort('${tblId}','${sortKey}',${groups.length+(showOther?2:1)})">รวม</th></tr>`;
 
   let subhdr = '<tr><th></th>';
@@ -2592,7 +2781,7 @@ async function loadFromGAS() {
     SC_DATA = (data.sc || []).map(r => r.map(v => (v===null||v===undefined)?'':String(v).trim()));
     buildSCIndex();
     showLoading(false);
-    initBK(BK); initRS(RS); initTP(); initSC6(); initRK7(); initT8(); initSC9(); initSC10();
+    initBK(BK); initRS(RS); initTP(); initSC6(); initRK7(); initT8(); initSC9(); initSC10(); initMasterFilter();
     updateDataStatus();
     render();
     toast('✅ โหลดข้อมูลสำเร็จ — BK ' + BK.length + ' รายการ, RS ' + RS.length + ' รายการ');
