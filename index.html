@@ -3021,9 +3021,11 @@ function buildSC9Table(containerId, bkData, rsData){
   if(!yr||!mo) return;
 
   const MO_EN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MO_EN_FULL=['','January','February','March','April','May','June','July','August','September','October','November','December'];
   const MO_TH_=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const moLabel=`${MO_EN[mo]} ${yr}`;
   const moLabelTH=`${MO_TH_[mo]} ${yr}`;
+  const moLabelEN=`${MO_EN_FULL[mo].toUpperCase()} ${yr}`;
 
   const bkRows=getSC9Data(bkData,BF,yr,mo);
   const rsRows=getSC9Data(rsData,RF,yr,mo);
@@ -3102,23 +3104,20 @@ function buildSC9Table(containerId, bkData, rsData){
   const el=$(containerId); if(!el)return;
   el.innerHTML=`
     <div class="dl-shrink" style="padding:16px 22px 0">
-      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px">
-        <div style="flex:0 1 100px;height:2px;background:linear-gradient(90deg,transparent,#1a3a5c);position:relative">
-          <div style="position:absolute;right:0;top:-6px;width:0;height:0;border-style:solid;border-width:0 0 14px 14px;border-color:transparent transparent #1a3a5c transparent"></div>
+      <div style="display:flex;align-items:stretch;gap:16px;margin-bottom:18px;flex-wrap:wrap">
+        <div style="flex:1 1 300px;min-width:260px;background:linear-gradient(100deg,#5bb3ea,#1a73b8);clip-path:polygon(0 0,calc(100% - 24px) 0,100% 50%,calc(100% - 24px) 100%,0 100%,24px 50%);display:flex;align-items:center;gap:14px;padding:14px 42px 14px 32px;color:#fff;box-shadow:0 4px 14px rgba(26,115,184,.35)">
+          <div style="font-size:32px;line-height:1">📅</div>
+          <div>
+            <div style="font-weight:800;font-size:18px;letter-spacing:.3px;white-space:nowrap">เดือน ${moLabelTH}</div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:2px;opacity:.9;margin-top:3px;white-space:nowrap">${moLabelEN}</div>
+          </div>
         </div>
-        <div style="background:#1a3a5c;color:#fff;padding:10px 26px;border-radius:24px;font-weight:800;font-size:16px;box-shadow:0 4px 12px rgba(26,58,92,.3);white-space:nowrap">📅 เดือน ${moLabelTH}</div>
-        <div style="flex:0 1 100px;height:2px;background:linear-gradient(90deg,#1a3a5c,transparent);position:relative">
-          <div style="position:absolute;left:0;top:-6px;width:0;height:0;border-style:solid;border-width:14px 14px 0 0;border-color:#1a3a5c transparent transparent transparent"></div>
+        <div class="kpi-live-only" style="flex:0 1 240px;min-width:200px">
+          ${kpiCard('🏢','linear-gradient(135deg,#1a3a5c,#3a5f8c)','สาขาทั้งหมด',activeBrs.length,'สาขา')}
         </div>
       </div>
 
       <div class="kpi-live-only">
-        <div style="display:flex;justify-content:center;margin-bottom:18px">
-          <div style="max-width:260px;width:100%">
-            ${kpiCard('🏢','linear-gradient(135deg,#1a3a5c,#3a5f8c)','สาขาทั้งหมด',activeBrs.length,'สาขา')}
-          </div>
-        </div>
-
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;margin-bottom:20px">
           <div>
             <div style="background:#1a3a5c;color:#fff;display:inline-block;padding:6px 16px;border-radius:20px;font-weight:800;font-size:12.5px;margin-bottom:10px">📋 ฝั่งจอง (Booking)</div>
