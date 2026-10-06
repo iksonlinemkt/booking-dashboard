@@ -3036,12 +3036,10 @@ function buildSC9Table(containerId, bkData, rsData){
     return{pup,mux,tot:pup+mux};
   }
 
-  // แสดงเฉพาะสาขาที่มีข้อมูล (BK หรือ RS)
-  const activeBrs=BRANCHES.filter(br=>{
-    const b=brStat(bkRows,BF,br);
-    const r=brStat(rsRows,RF,br);
-    return b.tot>0||r.tot>0;
-  });
+  // แสดงครบทุกสาขาขายจริงเสมอ (BN/SR/BS/KS) ไม่ซ่อนสาขาที่ยังไม่มีข้อมูลเดือนนี้ —
+  // ไม่รวม FT (ฝ่ายทดสอบ) / HO (สนญ.) เพราะไม่ใช่สาขาขายจริง
+  const REAL_BRANCHES=['BN','SR','BS','KS'];
+  const activeBrs=REAL_BRANCHES;
 
   // totals
   const bkTot={pup:0,mux:0,tot:0},rsTot={pup:0,mux:0,tot:0};
@@ -3058,7 +3056,9 @@ function buildSC9Table(containerId, bkData, rsData){
     return activeBrs.map((br,i)=>{
       const s=brStat(data,FI,br);
       const bg=i%2?'#f7f9fc':'#fff';
-      return`<tr style="background:${bg};border-bottom:1px solid #eef2f7">
+      const empty=s.tot===0;
+      const dim=empty?'opacity:.45':'';
+      return`<tr style="background:${bg};border-bottom:1px solid #eef2f7;${dim}">
         <td style="padding:9px 12px">
           <span style="display:inline-flex;align-items:center;gap:8px">
             <span style="background:#1a3a5c;color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:5px;letter-spacing:.3px">${br}</span>
@@ -3067,7 +3067,7 @@ function buildSC9Table(containerId, bkData, rsData){
         </td>
         <td style="padding:9px;text-align:center;font-weight:800;color:#e84c1e;font-size:14px">${s.pup||0}</td>
         <td style="padding:9px;text-align:center;font-weight:800;color:#1a3a5c;font-size:14px">${s.mux||0}</td>
-        <td style="padding:9px;text-align:center;font-weight:800;color:#166534;background:#eafaf1;font-size:14px">${s.tot}</td>
+        <td style="padding:9px;text-align:center;font-weight:800;color:#166534;background:${empty?'#f3f4f6':'#eafaf1'};font-size:14px">${s.tot}</td>
       </tr>`;
     }).join('');
   }
