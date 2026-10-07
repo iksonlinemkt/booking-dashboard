@@ -263,7 +263,7 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
     <span id="dataStatus" style="font-size:11px;opacity:.7;"></span>
-    <button onclick="loadFromGAS()" style="padding:5px 13px;border-radius:6px;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:#fff;font-size:12px;font-weight:700;cursor:pointer;" title="โหลดข้อมูลใหม่จาก Google Sheet">🔄 รีโหลด</button>
+    <button id="btnSync" onclick="syncFromSheet()" style="padding:5px 13px;border-radius:6px;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:#fff;font-size:12px;font-weight:700;cursor:pointer;" title="หลังลงข้อมูลใหม่ใน Google Sheet กดเพื่ออัปเดตข้อมูลมาที่ Dashboard">🔄 อัปเดตข้อมูล</button>
     <button onclick="resetGasUrl()" style="padding:5px 13px;border-radius:6px;border:1.5px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.7);font-size:12px;font-weight:700;cursor:pointer;" title="เปลี่ยน GAS URL">⚙️ URL</button>
   </div>
 </div>
@@ -2721,6 +2721,28 @@ function updateDataStatus() {
   } else {
     if (sub) sub.textContent = 'ยังไม่มีข้อมูล';
     if (stat) stat.textContent = '';
+  }
+}
+
+// ── SYNC: Google Sheet → MySQL แล้วโหลดข้อมูลใหม่ ─────────────────────────────
+async function syncFromSheet() {
+  const btn = document.getElementById('btnSync');
+  if (btn && btn.disabled) return;
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = '⏳ กำลังอัปเดต…'; }
+  try {
+    const res = await fetch(GAS_URL.replace(/api\.php.*$/, 'sync.php'), { method: 'POST' });
+    const r = await res.json();
+    if (r.busy || r.cooldown) {
+      alert('ℹ️ ' + r.message);          // มีคนเพิ่งอัปเดต — โหลดข้อมูลล่าสุดมาแสดงต่อไปด้านล่าง
+    } else if (!r.ok) {
+      throw new Error(r.message || ('HTTP ' + res.status));
+    }
+    await loadFromGAS();
+  } catch (e) {
+    alert('❌ อัปเดตข้อมูลไม่สำเร็จ: ' + e.message + '\nข้อมูลเดิมยังอยู่ครบ ลองใหม่อีกครั้งหรือแจ้งผู้ดูแลระบบ');
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = orig; }
   }
 }
 
