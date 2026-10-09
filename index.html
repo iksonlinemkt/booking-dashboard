@@ -2135,7 +2135,7 @@ const TEAM_MAP={
   "A6151":"BN-B","A5950":"BN-B","A3156":"BN-B",
   "A0055":"KS","A5199":"KS"
 };
-const BR_NAME={"BN":"บางนา","BS":"บางเสาธง","KS":"เกษตร","SR":"ศรีนครินทร์","FT":"ฝ่ายทดสอบ","HO":"สำนักงานใหญ่"};
+const BR_NAME={"BN":"บางนา","BS":"บางเสาธง","KS":"เกษตร","SR":"ศรีนครินทร์","FT":"คุณชาญศักดิ์","HO":"สำนักงานใหญ่"};
 
 // แปลงค่า dd/mm/yyyy input → YYYY-MM-DD ใส่ hidden field
 function applyDMY(id){
@@ -3060,9 +3060,9 @@ function buildSC9Table(containerId, bkData, rsData){
     return{pup,mux,tot:pup+mux};
   }
 
-  // แสดงครบทุกสาขาขายจริงเสมอ (BN/SR/BS/KS) ไม่ซ่อนสาขาที่ยังไม่มีข้อมูลเดือนนี้ —
-  // ไม่รวม FT (ฝ่ายทดสอบ) / HO (สนญ.) เพราะไม่ใช่สาขาขายจริง
-  const REAL_BRANCHES=['BN','SR','BS','KS'];
+  // แสดงครบทุกสาขา/ทีมขายเสมอ (BN/SR/BS/KS + FT = เซลล์คุณชาญศักดิ์) ไม่ซ่อนแถวที่ยังไม่มีข้อมูลเดือนนี้ —
+  // ไม่รวม HO (สนญ.) เพราะไม่ใช่ทีมขาย
+  const REAL_BRANCHES=['BN','SR','BS','KS','FT'];
   const activeBrs=REAL_BRANCHES;
 
   // totals
