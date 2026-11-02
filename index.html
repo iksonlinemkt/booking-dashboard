@@ -942,6 +942,7 @@ function applyMasterFilter(){
   if($('bkSC')) $('bkSC').value=sc;
   if($('rsBr')) $('rsBr').value=br;
   if($('rsSC')) $('rsSC').value=sc;
+  t8Br=br; t8SC=sc;   // แท็บยอดขายรายรุ่น (แท็บ 8) ใช้ค่านี้กรองด้วย
 
   // Top Performer — ใช้เดือน/ปีต้น-ปลาย จากช่วงวันที่
   const fromDt=new Date(from), toDt=new Date(to);
@@ -2551,6 +2552,7 @@ const MUX_GROUPS=[
   {label:'RS',        types:['RS']},
 ];
 const t8SortState={pup:{col:-1,asc:false},mux:{col:-1,asc:false}};
+let t8Br='', t8SC='';   // สาขา/SC จากตัวกรองกลาง ('' = ทั้งหมด) — ตั้งค่าใน applyMasterFilter()
 
 function initT8(){
   const allDates=[...BK.map(r=>r[BF.d]),...RS.map(r=>r[RF.d])].filter(Boolean).sort();
@@ -2568,7 +2570,11 @@ function getT8Data(){
   const FI=(src==='bk'?BF:RF);
   return raw.filter(r=>{
     const d=r[FI.d]||'';
-    return(!from||d>=from)&&(!to||d<=to);
+    if(from&&d<from)return false;
+    if(to&&d>to)return false;
+    if(t8Br&&r[FI.br]!==t8Br)return false;
+    if(t8SC&&r[FI.sc]!==t8SC)return false;
+    return true;
   }).map(r=>({sc:r[FI.sc]||'',mg:r[FI.mg]||'',tp:r[FI.tp]||''}));
 }
 
