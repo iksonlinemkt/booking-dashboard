@@ -794,6 +794,13 @@ th.gpp{background:#f9b8ae;color:#e84c1e;font-weight:700;padding:5px 7px;}
 <div class="page" id="p8">
   <div class="t8-wrap">
     <div class="t8-section">
+      <div class="t8-sec-hd">📊 สรุปรวม P-UP + MU-X — แยกตามเซล</div>
+      <div class="t8-tbl-wrap"><table class="t8-tbl" id="t8AllTbl">
+        <thead id="t8AllHead"></thead>
+        <tbody id="t8AllBody"></tbody>
+      </table></div>
+    </div>
+    <div class="t8-section">
       <div class="t8-sec-hd">🛻 P-UP — ยอดรายรุ่น แยกตามเซล</div>
       <div class="t8-tbl-wrap"><table class="t8-tbl" id="t8PupTbl">
         <thead id="t8PupHead"></thead>
@@ -2710,8 +2717,40 @@ function t8Sort(tblId,sortKey,colIdx,keepDir){
   });
 }
 
+// ตารางสรุปรวม P-UP + MU-X ต่อเซล (ใช้ข้อมูลชุดเดียวกับตารางรายรุ่นด้านล่าง)
+function buildT8All(data){
+  const head=document.getElementById('t8AllHead'), body=document.getElementById('t8AllBody');
+  if(!head||!body)return;
+  const map={};
+  data.forEach(r=>{
+    if(!r.sc||(r.mg!=='P-UP'&&r.mg!=='MU-X'))return;
+    const o=map[r.sc]||(map[r.sc]={pup:0,mux:0});
+    if(r.mg==='P-UP')o.pup++; else o.mux++;
+  });
+  const rows=Object.keys(map).map(sc=>({sc,pup:map[sc].pup,mux:map[sc].mux,tot:map[sc].pup+map[sc].mux}))
+    .sort((a,b)=>b.tot-a.tot||a.sc.localeCompare(b.sc));
+  if(!rows.length){
+    head.innerHTML='';
+    body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mut)">ไม่มีข้อมูล</td></tr>';
+    return;
+  }
+  const sumP=rows.reduce((t,r)=>t+r.pup,0), sumM=rows.reduce((t,r)=>t+r.mux,0), sumT=sumP+sumM;
+  const pct=(v,t)=>t?(v/t*100).toFixed(1)+'%':'';
+  head.innerHTML='<tr><th>SC</th><th>P-UP</th><th>MU-X</th><th>รวม</th><th>% P-UP</th><th>% MU-X</th></tr>';
+  body.innerHTML=rows.map(r=>
+    `<tr class="t8-data-row"><td>${r.sc}</td>`+
+    `<td class="t8-num">${r.pup||'-'}</td><td class="t8-num">${r.mux||'-'}</td>`+
+    `<td class="t8-tot">${r.tot}</td>`+
+    `<td class="t8-pct">${pct(r.pup,r.tot)}</td><td class="t8-pct">${pct(r.mux,r.tot)}</td></tr>`
+  ).join('')+
+  `<tr class="t8-sum"><td>รวมทั้งหมด (${rows.length} เซล)</td>`+
+  `<td class="t8-num">${sumP}</td><td class="t8-num">${sumM}</td><td>${sumT}</td>`+
+  `<td class="t8-pct">${pct(sumP,sumT)}</td><td class="t8-pct">${pct(sumM,sumT)}</td></tr>`;
+}
+
 function renderT8(){
   const data=getT8Data();
+  buildT8All(data);
   buildT8Table('t8PupTbl','t8PupHead','t8PupBody',data,PUP_GROUPS,'P-UP','pup');
   buildT8Table('t8MuxTbl','t8MuxHead','t8MuxBody',data,MUX_GROUPS,'MU-X','mux');
 }
