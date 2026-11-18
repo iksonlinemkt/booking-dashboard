@@ -34,5 +34,5 @@ cd /root/backups && ls -lt | head          # pick a file
 mkdir /tmp/r && tar xzf iks-XXXX.tar.gz -C /tmp/r && cd /tmp/r/*
 mysql iksdashboard < iksdashboard.sql
 cp -a iksdashboard/. /var/www/iksdashboard/ && chown -R www-data:www-data /var/www/iksdashboard
-cp nginx-api.ikssa.io /etc/nginx/sites-available/api.ikssa.io && nginx -t && systemctl reload nginx
+cp conf/nginx-api.ikssa.io /etc/nginx/sites-available/api.ikssa.io && nginx -t && systemctl reload nginx
 ```
