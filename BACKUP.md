@@ -1,19 +1,20 @@
 # BK&RS Dashboard — Backup & Restore
 
-## Restore points (git tags)
-| Tag | What it is |
+## Restore points
+| Restore point | What it is |
 |---|---|
-| `stable-2026-11-18` | Everything working as of 18 Nov 2026 (tabs 1-10, sync button, FT row, tab 8 filters + summary table) |
+| `backups/index.stable-2026-11-18.html` | Frozen full copy of the dashboard page, everything working as of 18 Nov 2026 (tabs 1-10, sync button, FT row, tab 8 filters + summary table). Never edited. |
+| git commit `226d525` | Same page state, in git history |
 
-List all: `git tag -l`. A tag is never moved or overwritten.
+Rule: before any larger change, a new frozen copy `backups/index.stable-<date>.html` is added. Older copies are never overwritten.
 
-### Restore the dashboard page to a tag
+### Restore the dashboard page
 ```bash
 git clone https://github.com/iksonlinemkt/booking-dashboard && cd booking-dashboard
-git checkout stable-2026-11-18 -- index.html
-git commit -m "Restore index.html from stable-2026-11-18" && git push origin main
+cp backups/index.stable-2026-11-18.html index.html
+git add index.html && git commit -m "Restore index.html from stable-2026-11-18" && git push origin main
 ```
-Or on GitHub: open the tag -> open `index.html` -> Raw -> copy back.
+Or on GitHub: open `backups/index.stable-2026-11-18.html` -> Raw -> copy everything -> paste into `index.html` -> Commit.
 
 ### Undo one bad change without losing the rest
 ```bash
